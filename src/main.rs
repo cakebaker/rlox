@@ -1,6 +1,7 @@
 #![warn(clippy::all, clippy::nursery, clippy::pedantic)]
 
 use std::env;
+use std::fs;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -21,5 +22,14 @@ fn run_prompt() {
 }
 
 fn run_file(path: &str) {
-    // do something
+    let file_content = fs::read_to_string(path);
+
+    match file_content {
+        Ok(source) => run(&source),
+        Err(e) => println!("{}: {}!", path, e),
+    }
+}
+
+fn run(source: &str) {
+    println!("{:?}", source);
 }
