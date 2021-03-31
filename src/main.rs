@@ -1,9 +1,14 @@
 #![warn(clippy::all, clippy::nursery, clippy::pedantic)]
 
+mod scanner;
+mod token;
+
 use std::env;
 use std::fs;
 use std::io;
 use std::io::BufRead;
+
+use crate::scanner::Scanner;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -35,5 +40,10 @@ fn run_file(path: &str) {
 }
 
 fn run(source: &str) {
-    println!("{:?}", source);
+    let scanner = Scanner::new(source);
+    let tokens = scanner.scan_tokens();
+
+    for token in tokens {
+        println!("{:?}", token);
+    }
 }
