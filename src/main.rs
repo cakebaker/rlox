@@ -2,6 +2,8 @@
 
 use std::env;
 use std::fs;
+use std::io;
+use std::io::BufRead;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -18,7 +20,9 @@ fn main() {
 }
 
 fn run_prompt() {
-    // do something
+    for line in io::stdin().lock().lines() {
+        run(&line.unwrap());
+    }
 }
 
 fn run_file(path: &str) {
