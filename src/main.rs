@@ -2,6 +2,7 @@
 
 mod scanner;
 mod token;
+mod token_type;
 
 use std::env;
 use std::fs;
@@ -40,8 +41,7 @@ fn run_file(path: &str) {
 }
 
 fn run(source: &str) {
-    let scanner = Scanner::new(source);
-    let tokens = scanner.scan_tokens();
+    let tokens = Scanner::scan_tokens(source);
 
     for token in tokens {
         println!("{:?}", token);
