@@ -65,7 +65,8 @@ impl Scanner {
                         tokens.push(Token::new(TokenType::Greater, c.to_string(), line));
                     }
                 }
-                _ => {}
+                ' ' | '\r' | '\t' => {} // ignore whitespace
+                _ => {} // TODO handle error
             }
             Self::scan_token(&source[token_length..], tokens, line)
         }
@@ -122,10 +123,20 @@ mod tests {
 
         for (string, expected_token_type) in strings_and_token_types {
             let result = Scanner::scan_tokens(string);
-            println!("{:?}", result);
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type(), expected_token_type);
             assert_eq!(result[1].token_type(), TokenType::Eof);
+        }
+    }
+
+    #[test]
+    fn ignore_whitespace() {
+        let strings = vec![" ", "\r", "\t"];
+
+        for string in strings {
+            let result = Scanner::scan_tokens(string);
+            assert_eq!(result.len(), 1);
+            assert_eq!(result[0].token_type(), TokenType::Eof);
         }
     }
 }
