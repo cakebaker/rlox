@@ -10,7 +10,7 @@ impl Scanner {
         Self::scan_token(source, tokens, initial_line)
     }
 
-    fn scan_token(source: &str, mut tokens: Vec<Token>, line: usize) -> Vec<Token> {
+    fn scan_token(source: &str, mut tokens: Vec<Token>, mut line: usize) -> Vec<Token> {
         if source.is_empty() {
             tokens.push(Token::new(TokenType::Eof, "".to_string(), line));
             tokens
@@ -66,6 +66,7 @@ impl Scanner {
                     }
                 }
                 ' ' | '\r' | '\t' => {} // ignore whitespace
+                '\n' => line += 1,
                 _ => {} // TODO handle error
             }
             Self::scan_token(&source[token_length..], tokens, line)
@@ -83,6 +84,7 @@ mod tests {
         let result = Scanner::scan_tokens("");
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].token_type(), TokenType::Eof);
+        assert_eq!(result[0].line(), 1);
     }
 
     #[test]
@@ -138,5 +140,13 @@ mod tests {
             assert_eq!(result.len(), 1);
             assert_eq!(result[0].token_type(), TokenType::Eof);
         }
+    }
+
+    #[test]
+    fn increase_line_counter_after_linebreak() {
+        let result = Scanner::scan_tokens("\n");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].token_type(), TokenType::Eof);
+        assert_eq!(result[0].line(), 2);
     }
 }

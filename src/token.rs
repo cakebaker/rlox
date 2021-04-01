@@ -16,6 +16,10 @@ impl Token {
         }
     }
 
+    pub const fn line(&self) -> usize {
+        self.line
+    }
+
     pub const fn token_type(&self) -> TokenType {
         self.token_type
     }
