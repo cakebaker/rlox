@@ -29,6 +29,19 @@ impl Scanner {
                 '+' => tokens.push(Token::new(TokenType::Plus, c.to_string(), line)),
                 ';' => tokens.push(Token::new(TokenType::Semicolon, c.to_string(), line)),
                 '*' => tokens.push(Token::new(TokenType::Star, c.to_string(), line)),
+                '/' => {
+                    let look_ahead = source.chars().nth(1);
+                    if look_ahead == Some('/') {
+                        let linebreak_position = source.find('\n');
+                        if linebreak_position == None {
+                            token_length = source.len();
+                        } else {
+                            token_length = linebreak_position.unwrap();
+                        }
+                    } else {
+                        tokens.push(Token::new(TokenType::Slash, c.to_string(), line));
+                    }
+                }
                 '!' => {
                     let look_ahead = source.chars().nth(1);
                     if look_ahead == Some('=') {
@@ -100,6 +113,7 @@ mod tests {
             ("+", TokenType::Plus),
             (";", TokenType::Semicolon),
             ("*", TokenType::Star),
+            ("/", TokenType::Slash),
         ];
 
         for (string, expected_token_type) in strings_and_token_types {
@@ -129,6 +143,18 @@ mod tests {
             assert_eq!(result[0].token_type(), expected_token_type);
             assert_eq!(result[1].token_type(), TokenType::Eof);
         }
+    }
+
+    #[test]
+    fn ignore_comments() {
+        let mut result = Scanner::scan_tokens("// a comment");
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].token_type(), TokenType::Eof);
+
+        result = Scanner::scan_tokens("// a comment\n;");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].token_type(), TokenType::Semicolon);
+        assert_eq!(result[1].token_type(), TokenType::Eof);
     }
 
     #[test]
