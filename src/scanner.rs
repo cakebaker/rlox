@@ -145,6 +145,24 @@ impl Scanner {
                         line,
                     ));
                 }
+                '_' | 'a'..='z' | 'A'..='Z' => {
+                    while source.chars().nth(munched_chars) != None
+                        && (source
+                            .chars()
+                            .nth(munched_chars)
+                            .unwrap()
+                            .is_ascii_alphabetic()
+                            || source.chars().nth(munched_chars).unwrap() == '_')
+                    {
+                        munched_chars += 1;
+                    }
+                    tokens.push(Token::new(
+                        TokenType::Identifier,
+                        source[..munched_chars].to_string(),
+                        None,
+                        line,
+                    ));
+                }
                 _ => {} // TODO handle error
             }
             Self::scan_token(&source[munched_chars..], tokens, line)
@@ -265,6 +283,18 @@ mod tests {
             assert_eq!(result[0].token_type(), TokenType::Number);
             assert_eq!(result[0].lexeme(), number);
             assert_eq!(result[0].literal(), Some(Literal::Number(literal)));
+            assert_eq!(result[1].token_type(), TokenType::Eof);
+        }
+    }
+
+    #[test]
+    fn scan_identifiers() {
+        let identifiers = vec!["_id", "id", "ID", "i_d"];
+
+        for identifier in identifiers {
+            let result = Scanner::scan_tokens(identifier);
+            assert_eq!(result.len(), 2);
+            assert_eq!(result[0].token_type(), TokenType::Identifier);
             assert_eq!(result[1].token_type(), TokenType::Eof);
         }
     }
