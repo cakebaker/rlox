@@ -15,7 +15,7 @@ impl Scanner {
             tokens.push(Token::new(TokenType::Eof, "".to_string(), None, line));
             tokens
         } else {
-            let mut token_length = 1;
+            let mut munched_chars = 1;
             let c = source.chars().next().unwrap();
 
             match c {
@@ -34,9 +34,9 @@ impl Scanner {
                     if look_ahead == Some('/') {
                         let linebreak_position = source.find('\n');
                         if linebreak_position == None {
-                            token_length = source.len();
+                            munched_chars = source.len();
                         } else {
-                            token_length = linebreak_position.unwrap();
+                            munched_chars = linebreak_position.unwrap();
                         }
                     } else {
                         tokens.push(Token::new(TokenType::Slash, c.to_string(), None, line));
@@ -51,7 +51,7 @@ impl Scanner {
                             None,
                             line,
                         ));
-                        token_length = 2;
+                        munched_chars = 2;
                     } else {
                         tokens.push(Token::new(TokenType::Bang, c.to_string(), None, line));
                     }
@@ -65,7 +65,7 @@ impl Scanner {
                             None,
                             line,
                         ));
-                        token_length = 2;
+                        munched_chars = 2;
                     } else {
                         tokens.push(Token::new(TokenType::Equal, c.to_string(), None, line));
                     }
@@ -79,7 +79,7 @@ impl Scanner {
                             None,
                             line,
                         ));
-                        token_length = 2;
+                        munched_chars = 2;
                     } else {
                         tokens.push(Token::new(TokenType::Less, c.to_string(), None, line));
                     }
@@ -93,7 +93,7 @@ impl Scanner {
                             None,
                             line,
                         ));
-                        token_length = 2;
+                        munched_chars = 2;
                     } else {
                         tokens.push(Token::new(TokenType::Greater, c.to_string(), None, line));
                     }
@@ -109,11 +109,11 @@ impl Scanner {
                         Some(source[1..close_position].to_string()),
                         line,
                     ));
-                    token_length = close_position + 1;
+                    munched_chars = close_position + 1;
                 }
                 _ => {} // TODO handle error
             }
-            Self::scan_token(&source[token_length..], tokens, line)
+            Self::scan_token(&source[munched_chars..], tokens, line)
         }
     }
 }
