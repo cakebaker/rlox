@@ -8,10 +8,10 @@ pub enum Literal {
 
 #[derive(Debug)]
 pub struct Token {
-    token_type: TokenType,
-    lexeme: String,
-    literal: Option<Literal>,
-    line: usize,
+    pub token_type: TokenType,
+    pub lexeme: String,
+    pub literal: Option<Literal>,
+    pub line: usize,
 }
 
 impl Token {
@@ -27,21 +27,5 @@ impl Token {
             literal,
             line,
         }
-    }
-
-    pub fn lexeme(&self) -> String {
-        self.lexeme.clone()
-    }
-
-    pub const fn line(&self) -> usize {
-        self.line
-    }
-
-    pub fn literal(&self) -> Option<Literal> {
-        self.literal.clone()
-    }
-
-    pub const fn token_type(&self) -> TokenType {
-        self.token_type
     }
 }

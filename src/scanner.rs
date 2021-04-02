@@ -187,8 +187,8 @@ mod tests {
     fn scan_empty_string() {
         let result = Scanner::scan_tokens("");
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].token_type(), TokenType::Eof);
-        assert_eq!(result[0].line(), 1);
+        assert_eq!(result[0].token_type, TokenType::Eof);
+        assert_eq!(result[0].line, 1);
     }
 
     #[test]
@@ -210,8 +210,8 @@ mod tests {
         for (string, expected_token_type) in strings_and_token_types {
             let result = Scanner::scan_tokens(string);
             assert_eq!(result.len(), 2);
-            assert_eq!(result[0].token_type(), expected_token_type);
-            assert_eq!(result[1].token_type(), TokenType::Eof);
+            assert_eq!(result[0].token_type, expected_token_type);
+            assert_eq!(result[1].token_type, TokenType::Eof);
         }
     }
 
@@ -231,8 +231,8 @@ mod tests {
         for (string, expected_token_type) in strings_and_token_types {
             let result = Scanner::scan_tokens(string);
             assert_eq!(result.len(), 2);
-            assert_eq!(result[0].token_type(), expected_token_type);
-            assert_eq!(result[1].token_type(), TokenType::Eof);
+            assert_eq!(result[0].token_type, expected_token_type);
+            assert_eq!(result[1].token_type, TokenType::Eof);
         }
     }
 
@@ -240,12 +240,12 @@ mod tests {
     fn ignore_comments() {
         let mut result = Scanner::scan_tokens("// a comment");
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].token_type(), TokenType::Eof);
+        assert_eq!(result[0].token_type, TokenType::Eof);
 
         result = Scanner::scan_tokens("// a comment\n;");
         assert_eq!(result.len(), 2);
-        assert_eq!(result[0].token_type(), TokenType::Semicolon);
-        assert_eq!(result[1].token_type(), TokenType::Eof);
+        assert_eq!(result[0].token_type, TokenType::Semicolon);
+        assert_eq!(result[1].token_type, TokenType::Eof);
     }
 
     #[test]
@@ -255,7 +255,7 @@ mod tests {
         for string in strings {
             let result = Scanner::scan_tokens(string);
             assert_eq!(result.len(), 1);
-            assert_eq!(result[0].token_type(), TokenType::Eof);
+            assert_eq!(result[0].token_type, TokenType::Eof);
         }
     }
 
@@ -263,21 +263,21 @@ mod tests {
     fn increase_line_counter_after_linebreak() {
         let result = Scanner::scan_tokens("\n");
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].token_type(), TokenType::Eof);
-        assert_eq!(result[0].line(), 2);
+        assert_eq!(result[0].token_type, TokenType::Eof);
+        assert_eq!(result[0].line, 2);
     }
 
     #[test]
     fn scan_string_literals() {
         let result = Scanner::scan_tokens("\"A string\"");
         assert_eq!(result.len(), 2);
-        assert_eq!(result[0].token_type(), TokenType::String);
-        assert_eq!(result[0].lexeme(), "\"A string\"");
+        assert_eq!(result[0].token_type, TokenType::String);
+        assert_eq!(result[0].lexeme, "\"A string\"");
         assert_eq!(
-            result[0].literal(),
+            result[0].literal,
             Some(Literal::String("A string".to_string()))
         );
-        assert_eq!(result[1].token_type(), TokenType::Eof);
+        assert_eq!(result[1].token_type, TokenType::Eof);
     }
 
     #[test]
@@ -287,10 +287,10 @@ mod tests {
         for (number, literal) in numbers_and_literals {
             let result = Scanner::scan_tokens(number);
             assert_eq!(result.len(), 2);
-            assert_eq!(result[0].token_type(), TokenType::Number);
-            assert_eq!(result[0].lexeme(), number);
-            assert_eq!(result[0].literal(), Some(Literal::Number(literal)));
-            assert_eq!(result[1].token_type(), TokenType::Eof);
+            assert_eq!(result[0].token_type, TokenType::Number);
+            assert_eq!(result[0].lexeme, number);
+            assert_eq!(result[0].literal, Some(Literal::Number(literal)));
+            assert_eq!(result[1].token_type, TokenType::Eof);
         }
     }
 
@@ -301,8 +301,8 @@ mod tests {
         for identifier in identifiers {
             let result = Scanner::scan_tokens(identifier);
             assert_eq!(result.len(), 2);
-            assert_eq!(result[0].token_type(), TokenType::Identifier);
-            assert_eq!(result[1].token_type(), TokenType::Eof);
+            assert_eq!(result[0].token_type, TokenType::Identifier);
+            assert_eq!(result[1].token_type, TokenType::Eof);
         }
     }
 
@@ -330,8 +330,8 @@ mod tests {
         for (keyword, token_type) in keywords_and_token_types {
             let result = Scanner::scan_tokens(keyword);
             assert_eq!(result.len(), 2);
-            assert_eq!(result[0].token_type(), token_type);
-            assert_eq!(result[1].token_type(), TokenType::Eof);
+            assert_eq!(result[0].token_type, token_type);
+            assert_eq!(result[1].token_type, TokenType::Eof);
         }
     }
 }
