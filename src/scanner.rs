@@ -111,6 +111,7 @@ impl Scanner {
                         line,
                     ));
                     munched_chars = close_position + 1;
+                    line += source[..close_position].matches('\n').count();
                 }
                 '0'..='9' => {
                     while source.chars().nth(munched_chars) != None
@@ -278,6 +279,15 @@ mod tests {
             Some(Literal::String("A string".to_string()))
         );
         assert_eq!(result[1].token_type, TokenType::Eof);
+    }
+
+    #[test]
+    fn scan_multiline_strings() {
+        let result = Scanner::scan_tokens("\"Line A\nLine B\"");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].token_type, TokenType::String);
+        assert_eq!(result[1].token_type, TokenType::Eof);
+        assert_eq!(result[1].line, 2);
     }
 
     #[test]
