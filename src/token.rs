@@ -2,7 +2,6 @@ use crate::token_type::TokenType;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Literal {
-    None,
     String(String),
     Number(f64),
 }
