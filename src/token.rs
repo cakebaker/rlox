@@ -1,10 +1,17 @@
 use crate::token_type::TokenType;
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum Literal {
+    None,
+    String(String),
+    Number(f64),
+}
+
 #[derive(Debug)]
 pub struct Token {
     token_type: TokenType,
     lexeme: String,
-    literal: Option<String>,
+    literal: Option<Literal>,
     line: usize,
 }
 
@@ -12,7 +19,7 @@ impl Token {
     pub const fn new(
         token_type: TokenType,
         lexeme: String,
-        literal: Option<String>,
+        literal: Option<Literal>,
         line: usize,
     ) -> Self {
         Self {
@@ -31,7 +38,7 @@ impl Token {
         self.line
     }
 
-    pub fn literal(&self) -> Option<String> {
+    pub fn literal(&self) -> Option<Literal> {
         self.literal.clone()
     }
 

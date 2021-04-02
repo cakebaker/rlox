@@ -1,3 +1,4 @@
+use crate::token::Literal;
 use crate::token::Token;
 use crate::token_type::TokenType;
 
@@ -106,10 +107,43 @@ impl Scanner {
                     tokens.push(Token::new(
                         TokenType::String,
                         source[..=close_position].to_string(),
-                        Some(source[1..close_position].to_string()),
+                        Some(Literal::String(source[1..close_position].to_string())),
                         line,
                     ));
                     munched_chars = close_position + 1;
+                }
+                '0'..='9' => {
+                    while source.chars().nth(munched_chars) != None
+                        && source.chars().nth(munched_chars).unwrap().is_ascii_digit()
+                    {
+                        munched_chars += 1;
+                    }
+
+                    if source.len() >= munched_chars + 2
+                        && source.chars().nth(munched_chars).unwrap() == '.'
+                        && source
+                            .chars()
+                            .nth(munched_chars + 1)
+                            .unwrap()
+                            .is_ascii_digit()
+                    {
+                        munched_chars += 2;
+                    }
+
+                    while source.chars().nth(munched_chars) != None
+                        && source.chars().nth(munched_chars).unwrap().is_ascii_digit()
+                    {
+                        munched_chars += 1;
+                    }
+
+                    tokens.push(Token::new(
+                        TokenType::Number,
+                        source[..munched_chars].to_string(),
+                        Some(Literal::Number(
+                            source[..munched_chars].parse::<f64>().unwrap(),
+                        )),
+                        line,
+                    ));
                 }
                 _ => {} // TODO handle error
             }
@@ -121,6 +155,7 @@ impl Scanner {
 #[cfg(test)]
 mod tests {
     use super::Scanner;
+    use crate::token::Literal;
     use crate::token_type::TokenType;
 
     #[test]
@@ -213,7 +248,24 @@ mod tests {
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].token_type(), TokenType::String);
         assert_eq!(result[0].lexeme(), "\"A string\"");
-        assert_eq!(result[0].literal(), Some("A string".to_string()));
+        assert_eq!(
+            result[0].literal(),
+            Some(Literal::String("A string".to_string()))
+        );
         assert_eq!(result[1].token_type(), TokenType::Eof);
+    }
+
+    #[test]
+    fn scan_number_literals() {
+        let numbers_and_literals = vec![("123", 123 as f64), ("123.45", 123.45)];
+
+        for (number, literal) in numbers_and_literals {
+            let result = Scanner::scan_tokens(number);
+            assert_eq!(result.len(), 2);
+            assert_eq!(result[0].token_type(), TokenType::Number);
+            assert_eq!(result[0].lexeme(), number);
+            assert_eq!(result[0].literal(), Some(Literal::Number(literal)));
+            assert_eq!(result[1].token_type(), TokenType::Eof);
+        }
     }
 }
