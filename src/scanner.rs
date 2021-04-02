@@ -156,8 +156,15 @@ impl Scanner {
                     {
                         munched_chars += 1;
                     }
+
+                    let token_type = match TokenType::get_type_for_keyword(&source[..munched_chars])
+                    {
+                        Some(keyword_type) => keyword_type,
+                        None => TokenType::Identifier,
+                    };
+
                     tokens.push(Token::new(
-                        TokenType::Identifier,
+                        token_type,
                         source[..munched_chars].to_string(),
                         None,
                         line,
@@ -295,6 +302,35 @@ mod tests {
             let result = Scanner::scan_tokens(identifier);
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type(), TokenType::Identifier);
+            assert_eq!(result[1].token_type(), TokenType::Eof);
+        }
+    }
+
+    #[test]
+    fn scan_keywords() {
+        let keywords_and_token_types = vec![
+            ("and", TokenType::And),
+            ("class", TokenType::Class),
+            ("else", TokenType::Else),
+            ("false", TokenType::False),
+            ("fun", TokenType::Fun),
+            ("for", TokenType::For),
+            ("if", TokenType::If),
+            ("nil", TokenType::Nil),
+            ("or", TokenType::Or),
+            ("print", TokenType::Print),
+            ("return", TokenType::Return),
+            ("super", TokenType::Super),
+            ("this", TokenType::This),
+            ("true", TokenType::True),
+            ("var", TokenType::Var),
+            ("while", TokenType::While),
+        ];
+
+        for (keyword, token_type) in keywords_and_token_types {
+            let result = Scanner::scan_tokens(keyword);
+            assert_eq!(result.len(), 2);
+            assert_eq!(result[0].token_type(), token_type);
             assert_eq!(result[1].token_type(), TokenType::Eof);
         }
     }
