@@ -114,35 +114,13 @@ impl Scanner {
                     line += source[..close_position].matches('\n').count();
                 }
                 '0'..='9' => {
-                    while source.chars().nth(munched_chars) != None
-                        && source.chars().nth(munched_chars).unwrap().is_ascii_digit()
-                    {
-                        munched_chars += 1;
-                    }
-
-                    if source.len() >= munched_chars + 2
-                        && source.chars().nth(munched_chars).unwrap() == '.'
-                        && source
-                            .chars()
-                            .nth(munched_chars + 1)
-                            .unwrap()
-                            .is_ascii_digit()
-                    {
-                        munched_chars += 2;
-                    }
-
-                    while source.chars().nth(munched_chars) != None
-                        && source.chars().nth(munched_chars).unwrap().is_ascii_digit()
-                    {
-                        munched_chars += 1;
-                    }
+                    let number = Self::scan_number(source);
+                    munched_chars = number.len();
 
                     tokens.push(Token::new(
                         TokenType::Number,
-                        source[..munched_chars].to_string(),
-                        Some(Literal::Number(
-                            source[..munched_chars].parse::<f64>().unwrap(),
-                        )),
+                        number.to_string(),
+                        Some(Literal::Number(number.parse::<f64>().unwrap())),
                         line,
                     ));
                 }
@@ -175,6 +153,35 @@ impl Scanner {
             }
             Self::scan_token(&source[munched_chars..], tokens, line)
         }
+    }
+
+    fn scan_number(source: &str) -> &str {
+        let mut munched_chars = 0;
+
+        while source.chars().nth(munched_chars) != None
+            && source.chars().nth(munched_chars).unwrap().is_ascii_digit()
+        {
+            munched_chars += 1;
+        }
+
+        if source.len() >= munched_chars + 2
+            && source.chars().nth(munched_chars).unwrap() == '.'
+            && source
+                .chars()
+                .nth(munched_chars + 1)
+                .unwrap()
+                .is_ascii_digit()
+        {
+            munched_chars += 2;
+        }
+
+        while source.chars().nth(munched_chars) != None
+            && source.chars().nth(munched_chars).unwrap().is_ascii_digit()
+        {
+            munched_chars += 1;
+        }
+
+        &source[..munched_chars]
     }
 }
 
