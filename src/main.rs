@@ -1,5 +1,6 @@
 #![warn(clippy::all, clippy::nursery, clippy::pedantic)]
 
+mod reporter;
 mod scanner;
 mod token;
 mod token_type;
@@ -9,6 +10,7 @@ use std::fs;
 use std::io;
 use std::io::BufRead;
 
+use crate::reporter::Reporter;
 use crate::scanner::Scanner;
 
 fn main() {
@@ -41,7 +43,13 @@ fn run_file(path: &str) {
 }
 
 fn run(source: &str) {
-    let tokens = Scanner::scan_tokens(source);
+    let mut reporter = Reporter::new();
+    let tokens = Scanner::scan_tokens(source, &mut reporter);
+    let errors = reporter.get_errors();
+
+    for error in errors {
+        eprintln!("{}", error);
+    }
 
     for token in tokens {
         println!("{:?}", token);

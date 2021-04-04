@@ -1,3 +1,4 @@
+use crate::reporter::Reporter;
 use crate::token::Literal;
 use crate::token::Token;
 use crate::token_type::TokenType;
@@ -5,13 +6,18 @@ use crate::token_type::TokenType;
 pub struct Scanner {}
 
 impl Scanner {
-    pub fn scan_tokens(source: &str) -> Vec<Token> {
+    pub fn scan_tokens(source: &str, reporter: &mut Reporter) -> Vec<Token> {
         let tokens = vec![];
         let initial_line = 1;
-        Self::scan_token(source, tokens, initial_line)
+        Self::scan_token(source, tokens, initial_line, reporter)
     }
 
-    fn scan_token(source: &str, mut tokens: Vec<Token>, mut line: usize) -> Vec<Token> {
+    fn scan_token(
+        source: &str,
+        mut tokens: Vec<Token>,
+        mut line: usize,
+        reporter: &mut Reporter,
+    ) -> Vec<Token> {
         if source.is_empty() {
             tokens.push(Token::new(TokenType::Eof, "".to_string(), None, line));
             tokens
@@ -151,7 +157,7 @@ impl Scanner {
                 }
                 _ => {} // TODO handle error
             }
-            Self::scan_token(&source[munched_chars..], tokens, line)
+            Self::scan_token(&source[munched_chars..], tokens, line, reporter)
         }
     }
 
@@ -188,12 +194,13 @@ impl Scanner {
 #[cfg(test)]
 mod tests {
     use super::Scanner;
+    use crate::reporter::Reporter;
     use crate::token::Literal;
     use crate::token_type::TokenType;
 
     #[test]
     fn scan_empty_string() {
-        let result = Scanner::scan_tokens("");
+        let result = Scanner::scan_tokens("", &mut Reporter::new());
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].token_type, TokenType::Eof);
         assert_eq!(result[0].line, 1);
@@ -216,7 +223,7 @@ mod tests {
         ];
 
         for (string, expected_token_type) in strings_and_token_types {
-            let result = Scanner::scan_tokens(string);
+            let result = Scanner::scan_tokens(string, &mut Reporter::new());
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, expected_token_type);
             assert_eq!(result[1].token_type, TokenType::Eof);
@@ -237,7 +244,7 @@ mod tests {
         ];
 
         for (string, expected_token_type) in strings_and_token_types {
-            let result = Scanner::scan_tokens(string);
+            let result = Scanner::scan_tokens(string, &mut Reporter::new());
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, expected_token_type);
             assert_eq!(result[1].token_type, TokenType::Eof);
@@ -246,11 +253,11 @@ mod tests {
 
     #[test]
     fn ignore_comments() {
-        let mut result = Scanner::scan_tokens("// a comment");
+        let mut result = Scanner::scan_tokens("// a comment", &mut Reporter::new());
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].token_type, TokenType::Eof);
 
-        result = Scanner::scan_tokens("// a comment\n;");
+        result = Scanner::scan_tokens("// a comment\n;", &mut Reporter::new());
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].token_type, TokenType::Semicolon);
         assert_eq!(result[1].token_type, TokenType::Eof);
@@ -261,7 +268,7 @@ mod tests {
         let strings = vec![" ", "\r", "\t"];
 
         for string in strings {
-            let result = Scanner::scan_tokens(string);
+            let result = Scanner::scan_tokens(string, &mut Reporter::new());
             assert_eq!(result.len(), 1);
             assert_eq!(result[0].token_type, TokenType::Eof);
         }
@@ -269,7 +276,7 @@ mod tests {
 
     #[test]
     fn increase_line_counter_after_linebreak() {
-        let result = Scanner::scan_tokens("\n");
+        let result = Scanner::scan_tokens("\n", &mut Reporter::new());
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].token_type, TokenType::Eof);
         assert_eq!(result[0].line, 2);
@@ -277,7 +284,7 @@ mod tests {
 
     #[test]
     fn scan_string_literals() {
-        let result = Scanner::scan_tokens("\"A string\"");
+        let result = Scanner::scan_tokens("\"A string\"", &mut Reporter::new());
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].token_type, TokenType::String);
         assert_eq!(result[0].lexeme, "\"A string\"");
@@ -290,7 +297,7 @@ mod tests {
 
     #[test]
     fn scan_multiline_strings() {
-        let result = Scanner::scan_tokens("\"Line A\nLine B\"");
+        let result = Scanner::scan_tokens("\"Line A\nLine B\"", &mut Reporter::new());
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].token_type, TokenType::String);
         assert_eq!(result[1].token_type, TokenType::Eof);
@@ -302,7 +309,7 @@ mod tests {
         let numbers_and_literals = vec![("123", 123 as f64), ("123.45", 123.45)];
 
         for (number, literal) in numbers_and_literals {
-            let result = Scanner::scan_tokens(number);
+            let result = Scanner::scan_tokens(number, &mut Reporter::new());
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, TokenType::Number);
             assert_eq!(result[0].lexeme, number);
@@ -316,7 +323,7 @@ mod tests {
         let identifiers = vec!["_id", "id", "ID", "i_d"];
 
         for identifier in identifiers {
-            let result = Scanner::scan_tokens(identifier);
+            let result = Scanner::scan_tokens(identifier, &mut Reporter::new());
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, TokenType::Identifier);
             assert_eq!(result[1].token_type, TokenType::Eof);
@@ -345,7 +352,7 @@ mod tests {
         ];
 
         for (keyword, token_type) in keywords_and_token_types {
-            let result = Scanner::scan_tokens(keyword);
+            let result = Scanner::scan_tokens(keyword, &mut Reporter::new());
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, token_type);
             assert_eq!(result[1].token_type, TokenType::Eof);
