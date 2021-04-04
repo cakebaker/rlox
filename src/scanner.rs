@@ -108,16 +108,22 @@ impl Scanner {
                 ' ' | '\r' | '\t' => {} // ignore whitespace
                 '\n' => line += 1,
                 '"' => {
-                    // TODO handle unterminated string
-                    let close_position = source[1..].find('"').unwrap() + 1;
-                    tokens.push(Token::new(
-                        TokenType::String,
-                        source[..=close_position].to_string(),
-                        Some(Literal::String(source[1..close_position].to_string())),
-                        line,
-                    ));
-                    munched_chars = close_position + 1;
-                    line += source[..close_position].matches('\n').count();
+                    if let Some(position) = source[1..].find('"') {
+                        // correct position because the find() doesn't start from the beginning
+                        let close_position = position + 1;
+                        tokens.push(Token::new(
+                            TokenType::String,
+                            source[..=close_position].to_string(),
+                            Some(Literal::String(source[1..close_position].to_string())),
+                            line,
+                        ));
+                        munched_chars = close_position + 1;
+                        line += source[..close_position].matches('\n').count();
+                    } else {
+                        reporter
+                            .report_error(format!("Unterminated string starting on line {}", line));
+                        munched_chars = source.len();
+                    }
                 }
                 '0'..='9' => {
                     let number = Self::scan_number(source);
@@ -293,6 +299,14 @@ mod tests {
             Some(Literal::String("A string".to_string()))
         );
         assert_eq!(result[1].token_type, TokenType::Eof);
+    }
+
+    #[test]
+    fn scan_unterminated_string() {
+        let mut reporter = Reporter::new();
+        assert_eq!(reporter.get_errors().len(), 0);
+        Scanner::scan_tokens("\"A string", &mut reporter);
+        assert_eq!(reporter.get_errors().len(), 1);
     }
 
     #[test]
