@@ -155,7 +155,7 @@ impl Scanner {
                         line,
                     ));
                 }
-                _ => {} // TODO handle error
+                _ => reporter.report_error(format!("Unexpected character {} on line {}", c, line)),
             }
             Self::scan_token(&source[munched_chars..], tokens, line, reporter)
         }
@@ -357,5 +357,13 @@ mod tests {
             assert_eq!(result[0].token_type, token_type);
             assert_eq!(result[1].token_type, TokenType::Eof);
         }
+    }
+
+    #[test]
+    fn scan_invalid_character() {
+        let mut reporter = Reporter::new();
+        assert_eq!(reporter.get_errors().len(), 0);
+        Scanner::scan_tokens("@", &mut reporter);
+        assert_eq!(reporter.get_errors().len(), 1);
     }
 }
