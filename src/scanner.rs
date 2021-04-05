@@ -126,40 +126,35 @@ impl Scanner {
                     }
                 }
                 '0'..='9' => {
-                    let number_token = Self::scan_number(source, line);
+                    let token = Self::scan_number(source, line);
 
-                    munched_chars = number_token.len();
-                    tokens.push(number_token);
+                    munched_chars = token.len();
+                    tokens.push(token);
                 }
                 '_' | 'a'..='z' | 'A'..='Z' => {
-                    while source.chars().nth(munched_chars) != None
-                        && (source
-                            .chars()
-                            .nth(munched_chars)
-                            .unwrap()
-                            .is_ascii_alphabetic()
-                            || source.chars().nth(munched_chars).unwrap() == '_')
-                    {
-                        munched_chars += 1;
-                    }
+                    let token = Self::scan_identifier(source, line);
 
-                    let token_type = match TokenType::get_type_for_keyword(&source[..munched_chars])
-                    {
-                        Some(keyword_type) => keyword_type,
-                        None => TokenType::Identifier,
-                    };
-
-                    tokens.push(Token::new(
-                        token_type,
-                        source[..munched_chars].to_string(),
-                        None,
-                        line,
-                    ));
+                    munched_chars = token.len();
+                    tokens.push(token);
                 }
                 _ => reporter.report_error(format!("Unexpected character {} on line {}", c, line)),
             }
             Self::scan_token(&source[munched_chars..], tokens, line, reporter)
         }
+    }
+
+    fn scan_identifier(source: &str, line: usize) -> Token {
+        let identifier: String = source
+            .chars()
+            .take_while(|c| c.is_ascii_alphabetic() || *c == '_')
+            .collect();
+
+        let token_type = match TokenType::get_type_for_keyword(&identifier) {
+            Some(keyword_type) => keyword_type,
+            None => TokenType::Identifier,
+        };
+
+        Token::new(token_type, identifier, None, line)
     }
 
     fn scan_number(source: &str, line: usize) -> Token {
