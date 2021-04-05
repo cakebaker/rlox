@@ -126,15 +126,10 @@ impl Scanner {
                     }
                 }
                 '0'..='9' => {
-                    let number = Self::scan_number(source);
-                    munched_chars = number.len();
+                    let number_token = Self::scan_number(source, line);
 
-                    tokens.push(Token::new(
-                        TokenType::Number,
-                        number.to_string(),
-                        Some(Literal::Number(number.parse::<f64>().unwrap())),
-                        line,
-                    ));
+                    munched_chars = number_token.len();
+                    tokens.push(number_token);
                 }
                 '_' | 'a'..='z' | 'A'..='Z' => {
                     while source.chars().nth(munched_chars) != None
@@ -167,7 +162,7 @@ impl Scanner {
         }
     }
 
-    fn scan_number(source: &str) -> &str {
+    fn scan_number(source: &str, line: usize) -> Token {
         let mut munched_chars = 0;
 
         while source.chars().nth(munched_chars) != None
@@ -193,7 +188,13 @@ impl Scanner {
             munched_chars += 1;
         }
 
-        &source[..munched_chars]
+        let number = &source[..munched_chars];
+        Token::new(
+            TokenType::Number,
+            number.to_string(),
+            Some(Literal::Number(number.parse::<f64>().unwrap())),
+            line,
+        )
     }
 }
 
