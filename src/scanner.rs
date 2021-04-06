@@ -158,29 +158,17 @@ impl Scanner {
     }
 
     fn scan_number(source: &str, line: usize) -> Token {
-        let mut munched_chars = 0;
+        let mut munched_chars = source.chars().take_while(char::is_ascii_digit).count();
 
-        while source.chars().nth(munched_chars) != None
-            && source.chars().nth(munched_chars).unwrap().is_ascii_digit()
-        {
-            munched_chars += 1;
-        }
-
-        if source.len() >= munched_chars + 2
-            && source.chars().nth(munched_chars).unwrap() == '.'
-            && source
+        if source[munched_chars..].chars().take(1).collect::<String>() == "." {
+            let n = source[(munched_chars + 1)..]
                 .chars()
-                .nth(munched_chars + 1)
-                .unwrap()
-                .is_ascii_digit()
-        {
-            munched_chars += 2;
-        }
+                .take_while(char::is_ascii_digit)
+                .count();
 
-        while source.chars().nth(munched_chars) != None
-            && source.chars().nth(munched_chars).unwrap().is_ascii_digit()
-        {
-            munched_chars += 1;
+            if n > 0 {
+                munched_chars = munched_chars + 1 + n;
+            }
         }
 
         let number = &source[..munched_chars];
