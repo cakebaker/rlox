@@ -4,9 +4,11 @@ use crate::token_type::TokenType;
 pub enum Literal {
     String(String),
     Number(f64),
+    Bool(bool),
+    Nil,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Token {
     pub token_type: TokenType,
     pub lexeme: String,
