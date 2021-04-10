@@ -115,9 +115,8 @@ impl Parser {
             TokenType::False => Ok(Expr::Literal(Literal::Bool(false))),
             TokenType::True => Ok(Expr::Literal(Literal::Bool(true))),
             TokenType::Nil => Ok(Expr::Literal(Literal::Nil)),
-            TokenType::Number | TokenType::String => {
-                Ok(Expr::Literal(self.previous().literal.unwrap()))
-            }
+            TokenType::Number(number) => Ok(Expr::Literal(Literal::Number(number))),
+            TokenType::String(string) => Ok(Expr::Literal(Literal::String(string))),
             TokenType::LeftParen => {
                 let expr = self.expression()?;
                 self.consume(TokenType::RightParen, "Expect ')' after expression.");

@@ -1,5 +1,4 @@
 use crate::reporter::Reporter;
-use crate::token::Literal;
 use crate::token::Token;
 use crate::token_type::TokenType;
 
@@ -19,23 +18,23 @@ impl Scanner {
         reporter: &mut Reporter,
     ) -> Vec<Token> {
         if source.is_empty() {
-            tokens.push(Token::new(TokenType::Eof, "".to_string(), None, line));
+            tokens.push(Token::new(TokenType::Eof, "".to_string(), line));
             tokens
         } else {
             let mut munched_chars = 1;
             let c = source.chars().next().unwrap();
 
             match c {
-                '(' => tokens.push(Token::new(TokenType::LeftParen, c.to_string(), None, line)),
-                ')' => tokens.push(Token::new(TokenType::RightParen, c.to_string(), None, line)),
-                '{' => tokens.push(Token::new(TokenType::LeftBrace, c.to_string(), None, line)),
-                '}' => tokens.push(Token::new(TokenType::RightBrace, c.to_string(), None, line)),
-                ',' => tokens.push(Token::new(TokenType::Comma, c.to_string(), None, line)),
-                '.' => tokens.push(Token::new(TokenType::Dot, c.to_string(), None, line)),
-                '-' => tokens.push(Token::new(TokenType::Minus, c.to_string(), None, line)),
-                '+' => tokens.push(Token::new(TokenType::Plus, c.to_string(), None, line)),
-                ';' => tokens.push(Token::new(TokenType::Semicolon, c.to_string(), None, line)),
-                '*' => tokens.push(Token::new(TokenType::Star, c.to_string(), None, line)),
+                '(' => tokens.push(Token::new(TokenType::LeftParen, c.to_string(), line)),
+                ')' => tokens.push(Token::new(TokenType::RightParen, c.to_string(), line)),
+                '{' => tokens.push(Token::new(TokenType::LeftBrace, c.to_string(), line)),
+                '}' => tokens.push(Token::new(TokenType::RightBrace, c.to_string(), line)),
+                ',' => tokens.push(Token::new(TokenType::Comma, c.to_string(), line)),
+                '.' => tokens.push(Token::new(TokenType::Dot, c.to_string(), line)),
+                '-' => tokens.push(Token::new(TokenType::Minus, c.to_string(), line)),
+                '+' => tokens.push(Token::new(TokenType::Plus, c.to_string(), line)),
+                ';' => tokens.push(Token::new(TokenType::Semicolon, c.to_string(), line)),
+                '*' => tokens.push(Token::new(TokenType::Star, c.to_string(), line)),
                 '/' => {
                     let look_ahead = source.chars().nth(1);
                     if look_ahead == Some('/') {
@@ -46,63 +45,43 @@ impl Scanner {
                             munched_chars = linebreak_position.unwrap();
                         }
                     } else {
-                        tokens.push(Token::new(TokenType::Slash, c.to_string(), None, line));
+                        tokens.push(Token::new(TokenType::Slash, c.to_string(), line));
                     }
                 }
                 '!' => {
                     let look_ahead = source.chars().nth(1);
                     if look_ahead == Some('=') {
-                        tokens.push(Token::new(
-                            TokenType::BangEqual,
-                            "!=".to_string(),
-                            None,
-                            line,
-                        ));
+                        tokens.push(Token::new(TokenType::BangEqual, "!=".to_string(), line));
                         munched_chars = 2;
                     } else {
-                        tokens.push(Token::new(TokenType::Bang, c.to_string(), None, line));
+                        tokens.push(Token::new(TokenType::Bang, c.to_string(), line));
                     }
                 }
                 '=' => {
                     let look_ahead = source.chars().nth(1);
                     if look_ahead == Some('=') {
-                        tokens.push(Token::new(
-                            TokenType::EqualEqual,
-                            "==".to_string(),
-                            None,
-                            line,
-                        ));
+                        tokens.push(Token::new(TokenType::EqualEqual, "==".to_string(), line));
                         munched_chars = 2;
                     } else {
-                        tokens.push(Token::new(TokenType::Equal, c.to_string(), None, line));
+                        tokens.push(Token::new(TokenType::Equal, c.to_string(), line));
                     }
                 }
                 '<' => {
                     let look_ahead = source.chars().nth(1);
                     if look_ahead == Some('=') {
-                        tokens.push(Token::new(
-                            TokenType::LessEqual,
-                            "<=".to_string(),
-                            None,
-                            line,
-                        ));
+                        tokens.push(Token::new(TokenType::LessEqual, "<=".to_string(), line));
                         munched_chars = 2;
                     } else {
-                        tokens.push(Token::new(TokenType::Less, c.to_string(), None, line));
+                        tokens.push(Token::new(TokenType::Less, c.to_string(), line));
                     }
                 }
                 '>' => {
                     let look_ahead = source.chars().nth(1);
                     if look_ahead == Some('=') {
-                        tokens.push(Token::new(
-                            TokenType::GreaterEqual,
-                            ">=".to_string(),
-                            None,
-                            line,
-                        ));
+                        tokens.push(Token::new(TokenType::GreaterEqual, ">=".to_string(), line));
                         munched_chars = 2;
                     } else {
-                        tokens.push(Token::new(TokenType::Greater, c.to_string(), None, line));
+                        tokens.push(Token::new(TokenType::Greater, c.to_string(), line));
                     }
                 }
                 ' ' | '\r' | '\t' => {} // ignore whitespace
@@ -112,9 +91,8 @@ impl Scanner {
                         // correct position because the find() doesn't start from the beginning
                         let close_position = position + 1;
                         tokens.push(Token::new(
-                            TokenType::String,
+                            TokenType::String(source[1..close_position].to_string()),
                             source[..=close_position].to_string(),
-                            Some(Literal::String(source[1..close_position].to_string())),
                             line,
                         ));
                         munched_chars = close_position + 1;
@@ -154,7 +132,7 @@ impl Scanner {
             None => TokenType::Identifier,
         };
 
-        Token::new(token_type, identifier, None, line)
+        Token::new(token_type, identifier, line)
     }
 
     fn scan_number(source: &str, line: usize) -> Token {
@@ -173,9 +151,8 @@ impl Scanner {
 
         let number = &source[..munched_chars];
         Token::new(
-            TokenType::Number,
+            TokenType::Number(number.parse().unwrap()),
             number.to_string(),
-            Some(Literal::Number(number.parse::<f64>().unwrap())),
             line,
         )
     }
@@ -276,12 +253,11 @@ mod tests {
     fn scan_string_literals() {
         let result = Scanner::scan_tokens("\"A string\"", &mut Reporter::new());
         assert_eq!(result.len(), 2);
-        assert_eq!(result[0].token_type, TokenType::String);
-        assert_eq!(result[0].lexeme, "\"A string\"");
         assert_eq!(
-            result[0].literal,
-            Some(Literal::String("A string".to_string()))
+            result[0].token_type,
+            TokenType::String("A string".to_string())
         );
+        assert_eq!(result[0].lexeme, "\"A string\"");
         assert_eq!(result[1].token_type, TokenType::Eof);
     }
 
@@ -297,7 +273,10 @@ mod tests {
     fn scan_multiline_strings() {
         let result = Scanner::scan_tokens("\"Line A\nLine B\"", &mut Reporter::new());
         assert_eq!(result.len(), 2);
-        assert_eq!(result[0].token_type, TokenType::String);
+        assert_eq!(
+            result[0].token_type,
+            TokenType::String("Line A\nLine B".to_string())
+        );
         assert_eq!(result[1].token_type, TokenType::Eof);
         assert_eq!(result[1].line, 2);
     }
@@ -309,9 +288,9 @@ mod tests {
         for (number, literal) in numbers_and_literals {
             let result = Scanner::scan_tokens(number, &mut Reporter::new());
             assert_eq!(result.len(), 2);
-            assert_eq!(result[0].token_type, TokenType::Number);
+            assert_eq!(result[0].token_type, TokenType::Number(literal));
             assert_eq!(result[0].lexeme, number);
-            assert_eq!(result[0].literal, Some(Literal::Number(literal)));
+            //            assert_eq!(result[0].literal, Some(Literal::Number(literal)));
             assert_eq!(result[1].token_type, TokenType::Eof);
         }
     }

@@ -1,5 +1,4 @@
-#[derive(Clone, Copy, Debug, PartialEq)]
-
+#[derive(Clone, Debug, PartialEq)]
 pub enum TokenType {
     // Single-character tokens
     LeftParen,
@@ -26,8 +25,8 @@ pub enum TokenType {
 
     // Literals
     Identifier,
-    String,
-    Number,
+    String(String),
+    Number(f64),
 
     // Keywords
     And,
