@@ -109,28 +109,24 @@ impl Parser {
     }
 
     fn primary(&mut self) -> Result<Expr, ParseError> {
-        if self.do_match(vec![TokenType::False]) {
-            return Ok(Expr::Literal(Literal::Bool(false)));
-        }
-        if self.do_match(vec![TokenType::True]) {
-            return Ok(Expr::Literal(Literal::Bool(true)));
-        }
-        if self.do_match(vec![TokenType::Nil]) {
-            return Ok(Expr::Literal(Literal::Nil));
-        }
-        if self.do_match(vec![TokenType::Number, TokenType::String]) {
-            return Ok(Expr::Literal(self.previous().literal.unwrap()));
-        }
+        let token = self.advance();
 
-        if self.do_match(vec![TokenType::LeftParen]) {
-            let expr = self.expression()?;
-            self.consume(TokenType::RightParen, "Expect ')' after expression.");
-            return Ok(Expr::Grouping {
-                expression: Box::new(expr),
-            });
+        match token.token_type {
+            TokenType::False => Ok(Expr::Literal(Literal::Bool(false))),
+            TokenType::True => Ok(Expr::Literal(Literal::Bool(true))),
+            TokenType::Nil => Ok(Expr::Literal(Literal::Nil)),
+            TokenType::Number | TokenType::String => {
+                Ok(Expr::Literal(self.previous().literal.unwrap()))
+            }
+            TokenType::LeftParen => {
+                let expr = self.expression()?;
+                self.consume(TokenType::RightParen, "Expect ')' after expression.");
+                Ok(Expr::Grouping {
+                    expression: Box::new(expr),
+                })
+            }
+            _ => Err(ParseError {}),
         }
-
-        Err(ParseError {})
     }
 
     fn do_match(&mut self, token_types: Vec<TokenType>) -> bool {
