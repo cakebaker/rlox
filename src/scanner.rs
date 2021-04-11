@@ -289,7 +289,6 @@ mod tests {
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, TokenType::Number(literal));
             assert_eq!(result[0].lexeme, number);
-            //            assert_eq!(result[0].literal, Some(Literal::Number(literal)));
             assert_eq!(result[1].token_type, TokenType::Eof);
         }
     }
