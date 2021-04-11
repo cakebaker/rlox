@@ -1,5 +1,12 @@
-use crate::token::Literal;
 use crate::token::Token;
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Literal {
+    String(String),
+    Number(f64),
+    Bool(bool),
+    Nil,
+}
 
 #[derive(Debug)]
 pub enum Expr {

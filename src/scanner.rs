@@ -162,7 +162,6 @@ impl Scanner {
 mod tests {
     use super::Scanner;
     use crate::reporter::Reporter;
-    use crate::token::Literal;
     use crate::token_type::TokenType;
 
     #[test]

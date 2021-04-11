@@ -1,5 +1,5 @@
 use crate::expr::Expr;
-use crate::token::Literal;
+use crate::expr::Literal;
 use crate::token::Token;
 use crate::token_type::TokenType;
 
