@@ -96,16 +96,19 @@ impl Parser {
     }
 
     fn unary(&mut self) -> Result<Expr, ParseError> {
-        if self.do_match(vec![TokenType::Bang, TokenType::Minus]) {
-            let operator = self.previous();
-            let right = self.unary()?;
-            return Ok(Expr::Unary {
-                operator,
-                right: Box::new(right),
-            });
-        }
+        let token = self.peek();
 
-        self.primary()
+        match token.token_type {
+            TokenType::Bang | TokenType::Minus => {
+                let operator = self.advance();
+                let right = self.unary()?;
+                Ok(Expr::Unary {
+                    operator,
+                    right: Box::new(right),
+                })
+            }
+            _ => self.primary(),
+        }
     }
 
     fn primary(&mut self) -> Result<Expr, ParseError> {
@@ -173,5 +176,58 @@ impl Parser {
 
     fn previous(&self) -> Token {
         self.tokens[self.current - 1].clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Parser;
+    use crate::expr::Expr;
+    use crate::expr::Literal;
+    use crate::token::Token;
+    use crate::token_type::TokenType;
+
+    #[test]
+    fn parse_unary_bang() {
+        let mut parser = Parser::new(vec![
+            token(TokenType::Bang),
+            token(TokenType::False),
+            token(TokenType::Eof),
+        ]);
+        if let Ok(result) = parser.parse() {
+            assert_eq!(
+                Expr::Unary {
+                    operator: token(TokenType::Bang),
+                    right: Box::new(Expr::Literal(Literal::Bool(false)))
+                },
+                result
+            );
+        } else {
+            panic!("parser.parse() returned unexpected Err");
+        }
+    }
+
+    #[test]
+    fn parse_unary_minus() {
+        let mut parser = Parser::new(vec![
+            token(TokenType::Minus),
+            token(TokenType::Number(1.0)),
+            token(TokenType::Eof),
+        ]);
+        if let Ok(result) = parser.parse() {
+            assert_eq!(
+                Expr::Unary {
+                    operator: token(TokenType::Minus),
+                    right: Box::new(Expr::Literal(Literal::Number(1.0)))
+                },
+                result
+            );
+        } else {
+            panic!("parser.parse() returned unexpected Err");
+        }
+    }
+
+    fn token(token_type: TokenType) -> Token {
+        Token::new(token_type, "".to_string(), 1)
     }
 }
