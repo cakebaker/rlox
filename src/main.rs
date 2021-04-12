@@ -1,6 +1,7 @@
 #![warn(clippy::all, clippy::nursery, clippy::pedantic)]
 
 mod expr;
+mod interpreter;
 mod parser;
 mod reporter;
 mod scanner;
@@ -12,6 +13,7 @@ use std::fs;
 use std::io;
 use std::io::BufRead;
 
+use crate::interpreter::Interpreter;
 use crate::parser::Parser;
 use crate::reporter::Reporter;
 use crate::scanner::Scanner;
@@ -51,7 +53,10 @@ fn run(source: &str) {
     let errors = reporter.get_errors();
 
     let mut parser = Parser::new(tokens.clone());
-    let expr = parser.parse();
+    if let Ok(expr) = parser.parse() {
+        println!("{:?}", expr);
+        Interpreter::interpret(expr);
+    }
 
     for error in errors {
         eprintln!("{}", error);
@@ -60,6 +65,4 @@ fn run(source: &str) {
     for token in tokens {
         println!("{:?}", token);
     }
-
-    println!("{:?}", expr);
 }
