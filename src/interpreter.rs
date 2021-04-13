@@ -4,8 +4,7 @@ use crate::expr::Literal;
 #[derive(Debug)]
 pub struct RuntimeError {}
 
-pub struct Interpreter {
-}
+pub struct Interpreter {}
 
 impl Interpreter {
     pub fn interpret(expr: Expr) {
@@ -20,7 +19,8 @@ impl Interpreter {
     fn evaluate(expr: Expr) -> Result<Literal, RuntimeError> {
         match expr {
             Expr::Literal(literal) => Ok(literal),
-            _ => Err(RuntimeError{}),
+            Expr::Grouping { expression: expr } => Self::evaluate(*expr),
+            _ => Err(RuntimeError {}),
         }
     }
 }
@@ -33,15 +33,35 @@ mod tests {
 
     #[test]
     fn evaluate_literals() {
-        let literals = vec![Literal::Bool(true), Literal::Bool(false), Literal::Nil, Literal::Number(1.0), Literal::String("str".to_string())];
+        let literals = vec![
+            Literal::Bool(true),
+            Literal::Bool(false),
+            Literal::Nil,
+            Literal::Number(1.0),
+            Literal::String("str".to_string()),
+        ];
 
         for literal in literals {
-           let expr = Expr::Literal(literal.clone());
+            let expr = Expr::Literal(literal.clone());
             if let Ok(result) = Interpreter::evaluate(expr) {
                 assert_eq!(literal, result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
             }
+        }
+    }
+
+    #[test]
+    fn evaluate_grouping() {
+        let literal = Literal::Bool(true);
+        let expr = Expr::Grouping {
+            expression: Box::new(Expr::Literal(literal.clone())),
+        };
+
+        if let Ok(result) = Interpreter::evaluate(expr) {
+            assert_eq!(literal, result);
+        } else {
+            panic!("Interpreter::evaluate() returned unexpected Err");
         }
     }
 }
