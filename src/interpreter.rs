@@ -153,62 +153,29 @@ mod tests {
     }
 
     #[test]
-    fn evaluate_subtraction() {
-        let expr = Expr::Binary {
-            left: Box::new(Expr::Literal(Literal::Number(3.0))),
-            operator: token(TokenType::Minus),
-            right: Box::new(Expr::Literal(Literal::Number(2.0))),
-        };
+    fn evaluate_arithmetic_operators() {
+        const LEFT: Literal = Literal::Number(3.0);
+        const RIGHT: Literal = Literal::Number(2.0);
 
-        if let Ok(result) = Interpreter::evaluate(expr) {
-            assert_eq!(Literal::Number(1.0), result);
-        } else {
-            panic!("Interpreter::evaluate() returned unexpected Err");
-        }
-    }
+        let operators_and_expectations = vec![
+            (TokenType::Minus, Literal::Number(1.0)),
+            (TokenType::Plus, Literal::Number(5.0)),
+            (TokenType::Star, Literal::Number(6.0)),
+            (TokenType::Slash, Literal::Number(1.5)),
+        ];
 
-    #[test]
-    fn evaluate_multiplication() {
-        let expr = Expr::Binary {
-            left: Box::new(Expr::Literal(Literal::Number(3.0))),
-            operator: token(TokenType::Star),
-            right: Box::new(Expr::Literal(Literal::Number(2.0))),
-        };
+        for (operator, expected) in operators_and_expectations {
+            let expr = Expr::Binary {
+                left: Box::new(Expr::Literal(LEFT)),
+                operator: token(operator),
+                right: Box::new(Expr::Literal(RIGHT)),
+            };
 
-        if let Ok(result) = Interpreter::evaluate(expr) {
-            assert_eq!(Literal::Number(6.0), result);
-        } else {
-            panic!("Interpreter::evaluate() returned unexpected Err");
-        }
-    }
-
-    #[test]
-    fn evaluate_division() {
-        let expr = Expr::Binary {
-            left: Box::new(Expr::Literal(Literal::Number(3.0))),
-            operator: token(TokenType::Slash),
-            right: Box::new(Expr::Literal(Literal::Number(2.0))),
-        };
-
-        if let Ok(result) = Interpreter::evaluate(expr) {
-            assert_eq!(Literal::Number(1.5), result);
-        } else {
-            panic!("Interpreter::evaluate() returned unexpected Err");
-        }
-    }
-
-    #[test]
-    fn evaluate_addition_of_numbers() {
-        let expr = Expr::Binary {
-            left: Box::new(Expr::Literal(Literal::Number(3.0))),
-            operator: token(TokenType::Plus),
-            right: Box::new(Expr::Literal(Literal::Number(2.0))),
-        };
-
-        if let Ok(result) = Interpreter::evaluate(expr) {
-            assert_eq!(Literal::Number(5.0), result);
-        } else {
-            panic!("Interpreter::evaluate() returned unexpected Err");
+            if let Ok(result) = Interpreter::evaluate(expr) {
+                assert_eq!(expected, result);
+            } else {
+                panic!("Interpreter::evaluate() returned unexpected Err");
+            }
         }
     }
 
