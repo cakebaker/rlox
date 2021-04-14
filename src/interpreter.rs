@@ -117,7 +117,7 @@ mod tests {
     #[test]
     fn evaluate_negation() {
         let expr = Expr::Unary {
-            operator: Token::new(TokenType::Minus, "-".to_string(), 1),
+            operator: token(TokenType::Minus),
             right: Box::new(Expr::Literal(Literal::Number(1.0))),
         };
 
@@ -140,7 +140,7 @@ mod tests {
 
         for (literal, expected) in literals {
             let expr = Expr::Unary {
-                operator: Token::new(TokenType::Bang, "!".to_string(), 1),
+                operator: token(TokenType::Bang),
                 right: Box::new(Expr::Literal(literal)),
             };
 
@@ -156,7 +156,7 @@ mod tests {
     fn evaluate_subtraction() {
         let expr = Expr::Binary {
             left: Box::new(Expr::Literal(Literal::Number(3.0))),
-            operator: Token::new(TokenType::Minus, "-".to_string(), 1),
+            operator: token(TokenType::Minus),
             right: Box::new(Expr::Literal(Literal::Number(2.0))),
         };
 
@@ -171,7 +171,7 @@ mod tests {
     fn evaluate_multiplication() {
         let expr = Expr::Binary {
             left: Box::new(Expr::Literal(Literal::Number(3.0))),
-            operator: Token::new(TokenType::Star, "-".to_string(), 1),
+            operator: token(TokenType::Star),
             right: Box::new(Expr::Literal(Literal::Number(2.0))),
         };
 
@@ -186,7 +186,7 @@ mod tests {
     fn evaluate_division() {
         let expr = Expr::Binary {
             left: Box::new(Expr::Literal(Literal::Number(3.0))),
-            operator: Token::new(TokenType::Slash, "-".to_string(), 1),
+            operator: token(TokenType::Slash),
             right: Box::new(Expr::Literal(Literal::Number(2.0))),
         };
 
@@ -201,7 +201,7 @@ mod tests {
     fn evaluate_addition_of_numbers() {
         let expr = Expr::Binary {
             left: Box::new(Expr::Literal(Literal::Number(3.0))),
-            operator: Token::new(TokenType::Plus, "-".to_string(), 1),
+            operator: token(TokenType::Plus),
             right: Box::new(Expr::Literal(Literal::Number(2.0))),
         };
 
@@ -216,7 +216,7 @@ mod tests {
     fn evaluate_addition_of_strings() {
         let expr = Expr::Binary {
             left: Box::new(Expr::Literal(Literal::String("aa".to_string()))),
-            operator: Token::new(TokenType::Plus, "-".to_string(), 1),
+            operator: token(TokenType::Plus),
             right: Box::new(Expr::Literal(Literal::String("bb".to_string()))),
         };
 
@@ -225,5 +225,9 @@ mod tests {
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
         }
+    }
+
+    fn token(token_type: TokenType) -> Token {
+        Token::new(token_type, "".to_string(), 1)
     }
 }
