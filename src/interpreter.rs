@@ -23,7 +23,11 @@ impl Interpreter {
             Expr::Literal(literal) => Ok(literal),
             Expr::Grouping { expression: expr } => Self::evaluate(*expr),
             Expr::Unary { operator, right } => Self::evaluate_unary(&operator, *right),
-            _ => Err(RuntimeError {}),
+            Expr::Binary {
+                left,
+                operator,
+                right,
+            } => Self::evaluate_binary(*left, &operator, *right),
         }
     }
 
@@ -41,6 +45,26 @@ impl Interpreter {
                     Literal::Bool(bool) => Ok(Literal::Bool(!bool)),
                     Literal::Nil => Ok(Literal::Bool(true)),
                     _ => Ok(Literal::Bool(false)),
+                }
+            }
+            _ => Err(RuntimeError {}),
+        }
+    }
+
+    fn evaluate_binary(left: Expr, operator: &Token, right: Expr) -> Result<Literal, RuntimeError> {
+        match (Self::evaluate(left)?, Self::evaluate(right)?) {
+            (Literal::Number(l), Literal::Number(r)) => match operator.token_type {
+                TokenType::Plus => Ok(Literal::Number(l + r)),
+                TokenType::Minus => Ok(Literal::Number(l - r)),
+                TokenType::Star => Ok(Literal::Number(l * r)),
+                TokenType::Slash => Ok(Literal::Number(l / r)),
+                _ => Err(RuntimeError {}),
+            },
+            (Literal::String(l), Literal::String(r)) => {
+                if operator.token_type == TokenType::Plus {
+                    Ok(Literal::String(format!("{}{}", l, r)))
+                } else {
+                    Err(RuntimeError {})
                 }
             }
             _ => Err(RuntimeError {}),
@@ -125,6 +149,81 @@ mod tests {
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
             }
+        }
+    }
+
+    #[test]
+    fn evaluate_subtraction() {
+        let expr = Expr::Binary {
+            left: Box::new(Expr::Literal(Literal::Number(3.0))),
+            operator: Token::new(TokenType::Minus, "-".to_string(), 1),
+            right: Box::new(Expr::Literal(Literal::Number(2.0))),
+        };
+
+        if let Ok(result) = Interpreter::evaluate(expr) {
+            assert_eq!(Literal::Number(1.0), result);
+        } else {
+            panic!("Interpreter::evaluate() returned unexpected Err");
+        }
+    }
+
+    #[test]
+    fn evaluate_multiplication() {
+        let expr = Expr::Binary {
+            left: Box::new(Expr::Literal(Literal::Number(3.0))),
+            operator: Token::new(TokenType::Star, "-".to_string(), 1),
+            right: Box::new(Expr::Literal(Literal::Number(2.0))),
+        };
+
+        if let Ok(result) = Interpreter::evaluate(expr) {
+            assert_eq!(Literal::Number(6.0), result);
+        } else {
+            panic!("Interpreter::evaluate() returned unexpected Err");
+        }
+    }
+
+    #[test]
+    fn evaluate_division() {
+        let expr = Expr::Binary {
+            left: Box::new(Expr::Literal(Literal::Number(3.0))),
+            operator: Token::new(TokenType::Slash, "-".to_string(), 1),
+            right: Box::new(Expr::Literal(Literal::Number(2.0))),
+        };
+
+        if let Ok(result) = Interpreter::evaluate(expr) {
+            assert_eq!(Literal::Number(1.5), result);
+        } else {
+            panic!("Interpreter::evaluate() returned unexpected Err");
+        }
+    }
+
+    #[test]
+    fn evaluate_addition_of_numbers() {
+        let expr = Expr::Binary {
+            left: Box::new(Expr::Literal(Literal::Number(3.0))),
+            operator: Token::new(TokenType::Plus, "-".to_string(), 1),
+            right: Box::new(Expr::Literal(Literal::Number(2.0))),
+        };
+
+        if let Ok(result) = Interpreter::evaluate(expr) {
+            assert_eq!(Literal::Number(5.0), result);
+        } else {
+            panic!("Interpreter::evaluate() returned unexpected Err");
+        }
+    }
+
+    #[test]
+    fn evaluate_addition_of_strings() {
+        let expr = Expr::Binary {
+            left: Box::new(Expr::Literal(Literal::String("aa".to_string()))),
+            operator: Token::new(TokenType::Plus, "-".to_string(), 1),
+            right: Box::new(Expr::Literal(Literal::String("bb".to_string()))),
+        };
+
+        if let Ok(result) = Interpreter::evaluate(expr) {
+            assert_eq!(Literal::String("aabb".to_string()), result);
+        } else {
+            panic!("Interpreter::evaluate() returned unexpected Err");
         }
     }
 }
