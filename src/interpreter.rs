@@ -58,6 +58,10 @@ impl Interpreter {
                 TokenType::Minus => Ok(Literal::Number(l - r)),
                 TokenType::Star => Ok(Literal::Number(l * r)),
                 TokenType::Slash => Ok(Literal::Number(l / r)),
+                TokenType::Greater => Ok(Literal::Bool(l > r)),
+                TokenType::GreaterEqual => Ok(Literal::Bool(l >= r)),
+                TokenType::Less => Ok(Literal::Bool(l < r)),
+                TokenType::LessEqual => Ok(Literal::Bool(l <= r)),
                 _ => Err(RuntimeError {}),
             },
             (Literal::String(l), Literal::String(r)) => {
@@ -191,6 +195,41 @@ mod tests {
             assert_eq!(Literal::String("aabb".to_string()), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
+        }
+    }
+
+    #[test]
+    fn evaluate_comparison_operators() {
+        const THREE: Literal = Literal::Number(3.0);
+        const TWO: Literal = Literal::Number(2.0);
+
+        let setup = vec![
+            (TWO, TokenType::Greater, THREE, false),
+            (THREE, TokenType::Greater, TWO, true),
+            (TWO, TokenType::Greater, TWO, false),
+            (TWO, TokenType::GreaterEqual, THREE, false),
+            (THREE, TokenType::GreaterEqual, TWO, true),
+            (TWO, TokenType::GreaterEqual, TWO, true),
+            (TWO, TokenType::Less, THREE, true),
+            (THREE, TokenType::Less, TWO, false),
+            (TWO, TokenType::Less, TWO, false),
+            (TWO, TokenType::LessEqual, THREE, true),
+            (THREE, TokenType::LessEqual, TWO, false),
+            (TWO, TokenType::LessEqual, TWO, true),
+        ];
+
+        for (left, operator, right, expected) in setup {
+            let expr = Expr::Binary {
+                left: Box::new(Expr::Literal(left)),
+                operator: token(operator),
+                right: Box::new(Expr::Literal(right)),
+            };
+
+            if let Ok(result) = Interpreter::evaluate(expr) {
+                assert_eq!(Literal::Bool(expected), result);
+            } else {
+                panic!("Interpreter::evaluate() returned unexpected Err");
+            }
         }
     }
 
