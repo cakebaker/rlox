@@ -62,16 +62,31 @@ impl Interpreter {
                 TokenType::GreaterEqual => Ok(Literal::Bool(l >= r)),
                 TokenType::Less => Ok(Literal::Bool(l < r)),
                 TokenType::LessEqual => Ok(Literal::Bool(l <= r)),
+                TokenType::EqualEqual => Ok(Literal::Bool(l == r)),
+                TokenType::BangEqual => Ok(Literal::Bool(l != r)),
                 _ => Err(RuntimeError {}),
             },
-            (Literal::String(l), Literal::String(r)) => {
-                if operator.token_type == TokenType::Plus {
-                    Ok(Literal::String(format!("{}{}", l, r)))
-                } else {
-                    Err(RuntimeError {})
-                }
-            }
-            _ => Err(RuntimeError {}),
+            (Literal::String(l), Literal::String(r)) => match operator.token_type {
+                TokenType::Plus => Ok(Literal::String(format!("{}{}", l, r))),
+                TokenType::EqualEqual => Ok(Literal::Bool(l == r)),
+                TokenType::BangEqual => Ok(Literal::Bool(l != r)),
+                _ => Err(RuntimeError {}),
+            },
+            (Literal::Bool(l), Literal::Bool(r)) => match operator.token_type {
+                TokenType::EqualEqual => Ok(Literal::Bool(l == r)),
+                TokenType::BangEqual => Ok(Literal::Bool(l != r)),
+                _ => Err(RuntimeError {}),
+            },
+            (Literal::Nil, Literal::Nil) => match operator.token_type {
+                TokenType::EqualEqual => Ok(Literal::Bool(true)),
+                TokenType::BangEqual => Ok(Literal::Bool(false)),
+                _ => Err(RuntimeError {}),
+            },
+            _ => match operator.token_type {
+                TokenType::EqualEqual => Ok(Literal::Bool(false)),
+                TokenType::BangEqual => Ok(Literal::Bool(true)),
+                _ => Err(RuntimeError {}),
+            },
         }
     }
 }
@@ -229,6 +244,50 @@ mod tests {
                 assert_eq!(Literal::Bool(expected), result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
+            }
+        }
+    }
+
+    #[test]
+    fn evaluate_equality_operators() {
+        const NIL: Literal = Literal::Nil;
+        const ZERO: Literal = Literal::Number(0.0);
+        const THREE: Literal = Literal::Number(3.0);
+        const TRUE: Literal = Literal::Bool(true);
+        const FALSE: Literal = Literal::Bool(false);
+        let empty: Literal = Literal::String("".to_string());
+        let bb: Literal = Literal::String("bb".to_string());
+
+        let setup = vec![
+            (NIL, NIL, true),
+            (ZERO, ZERO, true),
+            (ZERO, THREE, false),
+            (TRUE, TRUE, true),
+            (TRUE, FALSE, false),
+            (empty.clone(), empty.clone(), true),
+            (empty.clone(), bb, false),
+            (NIL, ZERO, false),
+            (NIL, FALSE, false),
+            (NIL, empty.clone(), false),
+        ];
+
+        for (left, right, expected) in setup {
+            let operators = vec![
+                (token(TokenType::EqualEqual), expected),
+                (token(TokenType::BangEqual), !expected),
+            ];
+            for (operator, expected) in operators {
+                let expr = Expr::Binary {
+                    left: Box::new(Expr::Literal(left.clone())),
+                    operator: operator,
+                    right: Box::new(Expr::Literal(right.clone())),
+                };
+
+                if let Ok(result) = Interpreter::evaluate(expr) {
+                    assert_eq!(Literal::Bool(expected), result);
+                } else {
+                    panic!("Interpreter::evaluate() returned unexpected Err");
+                }
             }
         }
     }
