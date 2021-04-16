@@ -5,6 +5,7 @@ mod interpreter;
 mod parser;
 mod reporter;
 mod scanner;
+mod stmt;
 mod token;
 mod token_type;
 
