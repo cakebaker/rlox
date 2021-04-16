@@ -5,7 +5,14 @@ use crate::token_type::TokenType;
 
 #[derive(Debug)]
 pub struct ParseError {
-    // TODO
+    token_type: TokenType,
+    message: String,
+}
+
+impl ParseError {
+    pub fn new(token_type: TokenType, message: &str) -> Self {
+        Self { token_type, message: message.to_string() }
+    }
 }
 
 pub struct Parser {
@@ -127,7 +134,7 @@ impl Parser {
                     expression: Box::new(expr),
                 })
             }
-            _ => Err(ParseError {}),
+            _ => Err(ParseError::new(token.token_type, "Invalid token")),
         }
     }
 
@@ -143,10 +150,10 @@ impl Parser {
     }
 
     fn consume(&mut self, token_type: TokenType, message: &str) -> Result<Token, ParseError> {
-        if self.check(token_type) {
+        if self.check(token_type.clone()) {
             Ok(self.advance())
         } else {
-            Err(ParseError {})
+            Err(ParseError::new(token_type, message))
         }
     }
 
