@@ -1,5 +1,5 @@
 use crate::expr::Expr;
-use crate::expr::Literal;
+use crate::literal::Literal;
 use crate::stmt::Stmt;
 use crate::token::Token;
 use crate::token_type::TokenType;
@@ -102,7 +102,7 @@ impl Interpreter {
 mod tests {
     use super::Interpreter;
     use crate::expr::Expr;
-    use crate::expr::Literal;
+    use crate::literal::Literal;
     use crate::token::Token;
     use crate::token_type::TokenType;
 

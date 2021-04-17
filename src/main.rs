@@ -2,6 +2,7 @@
 
 mod expr;
 mod interpreter;
+mod literal;
 mod parser;
 mod reporter;
 mod scanner;
