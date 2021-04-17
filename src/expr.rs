@@ -8,7 +8,7 @@ pub enum Literal {
     Nil,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
     Binary {
         left: Box<Expr>,
