@@ -15,7 +15,7 @@ impl Interpreter {
             match statement {
                 Stmt::Print(expr) => {
                     if let Ok(result) = Self::evaluate(expr) {
-                        println!("{:?}", result); // TODO
+                        println!("{}", result);
                     }
                 }
                 Stmt::Expr(expr) => {
