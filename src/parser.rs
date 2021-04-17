@@ -1,5 +1,6 @@
 use crate::expr::Expr;
 use crate::expr::Literal;
+use crate::stmt::Stmt;
 use crate::token::Token;
 use crate::token_type::TokenType;
 
@@ -11,7 +12,10 @@ pub struct ParseError {
 
 impl ParseError {
     pub fn new(token_type: TokenType, message: &str) -> Self {
-        Self { token_type, message: message.to_string() }
+        Self {
+            token_type,
+            message: message.to_string(),
+        }
     }
 }
 
@@ -25,8 +29,36 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Result<Expr, ParseError> {
-        self.expression()
+    pub fn parse(&mut self) -> Vec<Stmt> {
+        let mut statements = Vec::new();
+
+        while !self.is_at_end() {
+            if let Ok(statement) = self.statement() {
+                statements.push(statement);
+            } // TODO error handling
+        }
+
+        statements
+    }
+
+    fn statement(&mut self) -> Result<Stmt, ParseError> {
+        if self.do_match(vec![TokenType::Print]) {
+            self.print_statement()
+        } else {
+            self.expression_statement()
+        }
+    }
+
+    fn print_statement(&mut self) -> Result<Stmt, ParseError> {
+        let expr = self.expression()?;
+        self.consume(TokenType::Semicolon, "Expect ';' after value.");
+        Ok(Stmt::Print(expr))
+    }
+
+    fn expression_statement(&mut self) -> Result<Stmt, ParseError> {
+        let expr = self.expression()?;
+        self.consume(TokenType::Semicolon, "Expect ';' after value.");
+        Ok(Stmt::Expr(expr))
     }
 
     fn expression(&mut self) -> Result<Expr, ParseError> {
@@ -201,7 +233,7 @@ mod tests {
             token(TokenType::False),
             token(TokenType::Eof),
         ]);
-        if let Ok(result) = parser.parse() {
+        if let Ok(result) = parser.expression() {
             assert_eq!(
                 Expr::Unary {
                     operator: token(TokenType::Bang),
@@ -221,7 +253,7 @@ mod tests {
             token(TokenType::Number(1.0)),
             token(TokenType::Eof),
         ]);
-        if let Ok(result) = parser.parse() {
+        if let Ok(result) = parser.expression() {
             assert_eq!(
                 Expr::Unary {
                     operator: token(TokenType::Minus),

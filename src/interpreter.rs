@@ -1,5 +1,6 @@
 use crate::expr::Expr;
 use crate::expr::Literal;
+use crate::stmt::Stmt;
 use crate::token::Token;
 use crate::token_type::TokenType;
 
@@ -9,12 +10,18 @@ pub struct RuntimeError {}
 pub struct Interpreter {}
 
 impl Interpreter {
-    pub fn interpret(expr: Expr) {
-        if let Ok(value) = Self::evaluate(expr) {
-            println!("The value is: {:?}", value);
-        } else {
-            // TODO
-            println!("Runtime error!");
+    pub fn interpret(statements: Vec<Stmt>) {
+        for statement in statements {
+            match statement {
+                Stmt::Print(expr) => {
+                    if let Ok(result) = Self::evaluate(expr) {
+                        println!("{:?}", result); // TODO
+                    }
+                }
+                Stmt::Expr(expr) => {
+                    Self::evaluate(expr);
+                }
+            }
         }
     }
 

@@ -54,10 +54,8 @@ fn run(source: &str) {
     let errors = reporter.get_errors();
 
     let mut parser = Parser::new(tokens.clone());
-    if let Ok(expr) = parser.parse() {
-        println!("{:?}", expr);
-        Interpreter::interpret(expr);
-    }
+    let statements = parser.parse();
+    Interpreter::interpret(statements.clone());
 
     for error in errors {
         eprintln!("{}", error);
@@ -65,5 +63,9 @@ fn run(source: &str) {
 
     for token in tokens {
         println!("{:?}", token);
+    }
+
+    for statement in statements {
+        println!("{:?}", statement);
     }
 }
