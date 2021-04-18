@@ -33,12 +33,35 @@ impl Parser {
         let mut statements = Vec::new();
 
         while !self.is_at_end() {
-            if let Ok(statement) = self.statement() {
+            if let Ok(statement) = self.declaration() {
                 statements.push(statement);
             } // TODO error handling
         }
 
         statements
+    }
+
+    fn declaration(&mut self) -> Result<Stmt, ParseError> {
+        if self.do_match(vec![TokenType::Var]) {
+            self.var_declaration()
+        } else {
+            self.statement()
+        }
+    }
+
+    fn var_declaration(&mut self) -> Result<Stmt, ParseError> {
+        let name = self.consume(TokenType::Identifier, "Expect variable name.")?;
+
+        let mut initializer = None;
+        if self.do_match(vec![TokenType::Equal]) {
+            initializer = Some(self.expression()?);
+        }
+
+        self.consume(
+            TokenType::Semicolon,
+            "Expect ';' after variable declaration.",
+        );
+        Ok(Stmt::Var(name, initializer))
     }
 
     fn statement(&mut self) -> Result<Stmt, ParseError> {
@@ -159,6 +182,7 @@ impl Parser {
             TokenType::Nil => Ok(Expr::Literal(Literal::Nil)),
             TokenType::Number(number) => Ok(Expr::Literal(Literal::Number(number))),
             TokenType::String(string) => Ok(Expr::Literal(Literal::String(string))),
+            TokenType::Identifier => Ok(Expr::Variable(self.previous())),
             TokenType::LeftParen => {
                 let expr = self.expression()?;
                 self.consume(TokenType::RightParen, "Expect ')' after expression.");

@@ -21,6 +21,7 @@ impl Interpreter {
                 Stmt::Expr(expr) => {
                     Self::evaluate(expr);
                 }
+                Stmt::Var(name, initializer) => {} // TODO implement
             }
         }
     }
@@ -35,6 +36,7 @@ impl Interpreter {
                 operator,
                 right,
             } => Self::evaluate_binary(*left, &operator, *right),
+            Expr::Variable(name) => Err(RuntimeError {}), // TODO implement
         }
     }
 
