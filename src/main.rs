@@ -1,5 +1,6 @@
 #![warn(clippy::all, clippy::nursery, clippy::pedantic)]
 
+mod environment;
 mod expr;
 mod interpreter;
 mod literal;
