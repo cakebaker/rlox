@@ -19,7 +19,7 @@ impl Interpreter {
         }
     }
 
-    pub fn interpret(&self, statements: Vec<Stmt>) {
+    pub fn interpret(&mut self, statements: Vec<Stmt>) {
         for statement in statements {
             match statement {
                 Stmt::Print(expr) => {
@@ -30,7 +30,12 @@ impl Interpreter {
                 Stmt::Expr(expr) => {
                     self.evaluate(expr);
                 }
-                Stmt::Var(name, initializer) => {} // TODO implement
+                Stmt::Var(name, None) => self.environment.define(name.lexeme, Literal::Nil),
+                Stmt::Var(name, Some(initializer)) => {
+                    if let Ok(value) = self.evaluate(initializer) {
+                        self.environment.define(name.lexeme, value);
+                    }
+                }
             }
         }
     }
@@ -45,7 +50,7 @@ impl Interpreter {
                 operator,
                 right,
             } => self.evaluate_binary(*left, &operator, *right),
-            Expr::Variable(name) => Err(RuntimeError {}), // TODO implement
+            Expr::Variable(name) => self.environment.get(name),
         }
     }
 
@@ -119,6 +124,7 @@ mod tests {
     use super::Interpreter;
     use crate::expr::Expr;
     use crate::literal::Literal;
+    use crate::stmt::Stmt;
     use crate::token::Token;
     use crate::token_type::TokenType;
 
@@ -315,7 +321,39 @@ mod tests {
         }
     }
 
+    #[test]
+    fn evaluate_variable() {
+        let mut interpreter = Interpreter::new();
+        let stmt = Stmt::Var(
+            token(TokenType::String("test".to_string())),
+            Some(Expr::Literal(Literal::String("value".to_string()))),
+        );
+        interpreter.interpret(vec![stmt]);
+
+        let expr = Expr::Variable(token(TokenType::String("test".to_string())));
+
+        if let Ok(result) = interpreter.evaluate(expr) {
+            assert_eq!(Literal::String("value".to_string()), result);
+        } else {
+            panic!("Interpreter::evaluate() returned unexpected Err");
+        }
+    }
+
+    #[test]
+    fn evaluate_undefined_variable() {
+        let expr = Expr::Variable(token(TokenType::String("test".to_string())));
+
+        if let Err(e) = Interpreter::new().evaluate(expr) {
+            assert!(true);
+        } else {
+            panic!("Interpreter::evaluate() didn't return an Err");
+        }
+    }
+
     fn token(token_type: TokenType) -> Token {
-        Token::new(token_type, "".to_string(), 1)
+        match token_type {
+            TokenType::String(ref s) => Token::new(token_type.clone(), s.to_string(), 1),
+            _ => Token::new(token_type, "".to_string(), 1),
+        }
     }
 }
