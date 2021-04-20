@@ -1,3 +1,4 @@
+use crate::environment::Environment;
 use crate::expr::Expr;
 use crate::literal::Literal;
 use crate::stmt::Stmt;
@@ -7,41 +8,49 @@ use crate::token_type::TokenType;
 #[derive(Debug)]
 pub struct RuntimeError {}
 
-pub struct Interpreter {}
+pub struct Interpreter {
+    environment: Environment,
+}
 
 impl Interpreter {
-    pub fn interpret(statements: Vec<Stmt>) {
+    pub fn new() -> Self {
+        Self {
+            environment: Environment::new(),
+        }
+    }
+
+    pub fn interpret(&self, statements: Vec<Stmt>) {
         for statement in statements {
             match statement {
                 Stmt::Print(expr) => {
-                    if let Ok(result) = Self::evaluate(expr) {
+                    if let Ok(result) = self.evaluate(expr) {
                         println!("{}", result);
                     }
                 }
                 Stmt::Expr(expr) => {
-                    Self::evaluate(expr);
+                    self.evaluate(expr);
                 }
                 Stmt::Var(name, initializer) => {} // TODO implement
             }
         }
     }
 
-    fn evaluate(expr: Expr) -> Result<Literal, RuntimeError> {
+    fn evaluate(&self, expr: Expr) -> Result<Literal, RuntimeError> {
         match expr {
             Expr::Literal(literal) => Ok(literal),
-            Expr::Grouping { expression: expr } => Self::evaluate(*expr),
-            Expr::Unary { operator, right } => Self::evaluate_unary(&operator, *right),
+            Expr::Grouping { expression: expr } => self.evaluate(*expr),
+            Expr::Unary { operator, right } => self.evaluate_unary(&operator, *right),
             Expr::Binary {
                 left,
                 operator,
                 right,
-            } => Self::evaluate_binary(*left, &operator, *right),
+            } => self.evaluate_binary(*left, &operator, *right),
             Expr::Variable(name) => Err(RuntimeError {}), // TODO implement
         }
     }
 
-    fn evaluate_unary(operator: &Token, right: Expr) -> Result<Literal, RuntimeError> {
-        let result = Self::evaluate(right)?;
+    fn evaluate_unary(&self, operator: &Token, right: Expr) -> Result<Literal, RuntimeError> {
+        let result = self.evaluate(right)?;
 
         match operator.token_type {
             TokenType::Minus => match result {
@@ -60,8 +69,13 @@ impl Interpreter {
         }
     }
 
-    fn evaluate_binary(left: Expr, operator: &Token, right: Expr) -> Result<Literal, RuntimeError> {
-        match (Self::evaluate(left)?, Self::evaluate(right)?) {
+    fn evaluate_binary(
+        &self,
+        left: Expr,
+        operator: &Token,
+        right: Expr,
+    ) -> Result<Literal, RuntimeError> {
+        match (self.evaluate(left)?, self.evaluate(right)?) {
             (Literal::Number(l), Literal::Number(r)) => match operator.token_type {
                 TokenType::Plus => Ok(Literal::Number(l + r)),
                 TokenType::Minus => Ok(Literal::Number(l - r)),
@@ -120,7 +134,7 @@ mod tests {
 
         for literal in literals {
             let expr = Expr::Literal(literal.clone());
-            if let Ok(result) = Interpreter::evaluate(expr) {
+            if let Ok(result) = Interpreter::new().evaluate(expr) {
                 assert_eq!(literal, result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
@@ -135,7 +149,7 @@ mod tests {
             expression: Box::new(Expr::Literal(literal.clone())),
         };
 
-        if let Ok(result) = Interpreter::evaluate(expr) {
+        if let Ok(result) = Interpreter::new().evaluate(expr) {
             assert_eq!(literal, result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
@@ -149,7 +163,7 @@ mod tests {
             right: Box::new(Expr::Literal(Literal::Number(1.0))),
         };
 
-        if let Ok(result) = Interpreter::evaluate(expr) {
+        if let Ok(result) = Interpreter::new().evaluate(expr) {
             assert_eq!(Literal::Number(-1.0), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
@@ -172,7 +186,7 @@ mod tests {
                 right: Box::new(Expr::Literal(literal)),
             };
 
-            if let Ok(result) = Interpreter::evaluate(expr) {
+            if let Ok(result) = Interpreter::new().evaluate(expr) {
                 assert_eq!(expected, result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
@@ -199,7 +213,7 @@ mod tests {
                 right: Box::new(Expr::Literal(RIGHT)),
             };
 
-            if let Ok(result) = Interpreter::evaluate(expr) {
+            if let Ok(result) = Interpreter::new().evaluate(expr) {
                 assert_eq!(expected, result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
@@ -215,7 +229,7 @@ mod tests {
             right: Box::new(Expr::Literal(Literal::String("bb".to_string()))),
         };
 
-        if let Ok(result) = Interpreter::evaluate(expr) {
+        if let Ok(result) = Interpreter::new().evaluate(expr) {
             assert_eq!(Literal::String("aabb".to_string()), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
@@ -249,7 +263,7 @@ mod tests {
                 right: Box::new(Expr::Literal(right)),
             };
 
-            if let Ok(result) = Interpreter::evaluate(expr) {
+            if let Ok(result) = Interpreter::new().evaluate(expr) {
                 assert_eq!(Literal::Bool(expected), result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
@@ -292,7 +306,7 @@ mod tests {
                     right: Box::new(Expr::Literal(right.clone())),
                 };
 
-                if let Ok(result) = Interpreter::evaluate(expr) {
+                if let Ok(result) = Interpreter::new().evaluate(expr) {
                     assert_eq!(Literal::Bool(expected), result);
                 } else {
                     panic!("Interpreter::evaluate() returned unexpected Err");

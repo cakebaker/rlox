@@ -57,7 +57,7 @@ fn run(source: &str) {
 
     let mut parser = Parser::new(tokens.clone());
     let statements = parser.parse();
-    Interpreter::interpret(statements.clone());
+    Interpreter::new().interpret(statements.clone());
 
     for error in errors {
         eprintln!("{}", error);
