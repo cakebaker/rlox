@@ -55,7 +55,7 @@ impl Interpreter {
                 operator,
                 right,
             } => self.evaluate_binary(*left, &operator, *right),
-            Expr::Variable(name) => self.environment.get(name),
+            Expr::Variable(name) => self.environment.get(name.lexeme),
         }
     }
 

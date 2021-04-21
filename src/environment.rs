@@ -25,8 +25,8 @@ impl Environment {
         self.values.insert(name, value);
     }
 
-    pub fn get(&self, name: Token) -> Result<Literal, RuntimeError> {
-        match self.values.get(&name.lexeme) {
+    pub fn get(&self, name: String) -> Result<Literal, RuntimeError> {
+        match self.values.get(&name) {
             Some(literal) => Ok(literal.clone()),
             None => Err(RuntimeError {}),
         }
