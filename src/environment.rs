@@ -14,6 +14,13 @@ impl Environment {
         }
     }
 
+    pub fn assign(&mut self, name: String, value: Literal) {
+        if let Some(x) = self.values.get_mut(&name) {
+            *x = value;
+        }
+        // TODO throw Error if key is not in map
+    }
+
     pub fn define(&mut self, name: String, value: Literal) {
         self.values.insert(name, value);
     }

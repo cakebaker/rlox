@@ -40,8 +40,13 @@ impl Interpreter {
         }
     }
 
-    fn evaluate(&self, expr: Expr) -> Result<Literal, RuntimeError> {
+    fn evaluate(&mut self, expr: Expr) -> Result<Literal, RuntimeError> {
         match expr {
+            Expr::Assign { name, value } => {
+                let v = self.evaluate(*value)?;
+                self.environment.assign(name.lexeme, v.clone());
+                Ok(v)
+            }
             Expr::Literal(literal) => Ok(literal),
             Expr::Grouping { expression: expr } => self.evaluate(*expr),
             Expr::Unary { operator, right } => self.evaluate_unary(&operator, *right),
@@ -54,7 +59,7 @@ impl Interpreter {
         }
     }
 
-    fn evaluate_unary(&self, operator: &Token, right: Expr) -> Result<Literal, RuntimeError> {
+    fn evaluate_unary(&mut self, operator: &Token, right: Expr) -> Result<Literal, RuntimeError> {
         let result = self.evaluate(right)?;
 
         match operator.token_type {
@@ -75,7 +80,7 @@ impl Interpreter {
     }
 
     fn evaluate_binary(
-        &self,
+        &mut self,
         left: Expr,
         operator: &Token,
         right: Expr,
@@ -347,6 +352,28 @@ mod tests {
             assert!(true);
         } else {
             panic!("Interpreter::evaluate() didn't return an Err");
+        }
+    }
+
+    #[test]
+    fn evaluate_variable_assignment() {
+        let mut interpreter = Interpreter::new();
+        let def_stmt = Stmt::Var(
+            token(TokenType::String("test".to_string())),
+            Some(Expr::Literal(Literal::String("value".to_string()))),
+        );
+        let assign_stmt = Stmt::Expr(Expr::Assign {
+            name: token(TokenType::String("test".to_string())),
+            value: Box::new(Expr::Literal(Literal::String("updated".to_string()))),
+        });
+        interpreter.interpret(vec![def_stmt, assign_stmt]);
+
+        let expr = Expr::Variable(token(TokenType::String("test".to_string())));
+
+        if let Ok(result) = interpreter.evaluate(expr) {
+            assert_eq!(Literal::String("updated".to_string()), result);
+        } else {
+            panic!("Interpreter::evaluate() returned unexpected Err");
         }
     }
 
