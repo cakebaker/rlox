@@ -95,14 +95,11 @@ impl Parser {
             let equals = self.previous();
             let value = self.assignment()?;
 
-            match expr {
-                Expr::Variable(name) => {
-                    return Ok(Expr::Assign {
-                        name,
-                        value: Box::new(value),
-                    });
-                }
-                _ => {}
+            if let Expr::Variable(name) = expr {
+                return Ok(Expr::Assign {
+                    name,
+                    value: Box::new(value),
+                });
             }
         }
 
