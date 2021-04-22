@@ -1,6 +1,5 @@
 use crate::interpreter::RuntimeError;
 use crate::literal::Literal;
-use crate::token::Token;
 use std::collections::HashMap;
 
 pub struct Environment {
