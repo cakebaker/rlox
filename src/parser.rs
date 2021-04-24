@@ -52,10 +52,11 @@ impl Parser {
     fn var_declaration(&mut self) -> Result<Stmt, ParseError> {
         let name = self.consume(TokenType::Identifier, "Expect variable name.")?;
 
-        let mut initializer = None;
-        if self.do_match(vec![TokenType::Equal]) {
-            initializer = Some(self.expression()?);
-        }
+        let initializer = if self.do_match(vec![TokenType::Equal]) {
+            Some(self.expression()?)
+        } else {
+            None
+        };
 
         self.consume(
             TokenType::Semicolon,
