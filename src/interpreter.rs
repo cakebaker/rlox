@@ -21,20 +21,34 @@ impl Interpreter {
 
     pub fn interpret(&mut self, statements: Vec<Stmt>) {
         for statement in statements {
-            match statement {
-                Stmt::Print(expr) => {
-                    if let Ok(result) = self.evaluate(expr) {
-                        println!("{}", result);
-                    }
+            self.execute(statement);
+        }
+    }
+
+    fn execute(&mut self, statement: Stmt) {
+        match statement {
+            Stmt::Block(statements) => {
+                let previous = self.environment.clone();
+                self.environment = Environment::new_with_parent(self.environment.clone());
+
+                for statement in statements {
+                    self.execute(statement);
                 }
-                Stmt::Expr(expr) => {
-                    self.evaluate(expr);
+
+                self.environment = previous;
+            }
+            Stmt::Print(expr) => {
+                if let Ok(result) = self.evaluate(expr) {
+                    println!("{}", result);
                 }
-                Stmt::Var(name, None) => self.environment.define(name.lexeme, Literal::Nil),
-                Stmt::Var(name, Some(initializer)) => {
-                    if let Ok(value) = self.evaluate(initializer) {
-                        self.environment.define(name.lexeme, value);
-                    }
+            }
+            Stmt::Expr(expr) => {
+                self.evaluate(expr);
+            }
+            Stmt::Var(name, None) => self.environment.define(name.lexeme, Literal::Nil),
+            Stmt::Var(name, Some(initializer)) => {
+                if let Ok(value) = self.evaluate(initializer) {
+                    self.environment.define(name.lexeme, value);
                 }
             }
         }
