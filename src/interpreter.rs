@@ -90,14 +90,7 @@ impl Interpreter {
                 Literal::Number(number) => Ok(Literal::Number(-number)),
                 _ => Err(RuntimeError {}),
             },
-            TokenType::Bang => {
-                // false and nil are treated as falsey, everything else is truthy
-                match result {
-                    Literal::Bool(bool) => Ok(Literal::Bool(!bool)),
-                    Literal::Nil => Ok(Literal::Bool(true)),
-                    _ => Ok(Literal::Bool(false)),
-                }
-            }
+            TokenType::Bang => Ok(Literal::Bool(!self.is_truthy(result))),
             _ => Err(RuntimeError {}),
         }
     }
