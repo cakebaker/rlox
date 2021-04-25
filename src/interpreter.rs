@@ -37,6 +37,9 @@ impl Interpreter {
 
                 self.environment = previous;
             }
+            Stmt::If(condition, then_branch, else_branch) => {
+                // TODO implement
+            }
             Stmt::Print(expr) => {
                 if let Ok(result) = self.evaluate(expr) {
                     println!("{}", result);
