@@ -139,7 +139,7 @@ impl Interpreter {
         }
     }
 
-    fn is_truthy(&self, literal: &Literal) -> bool {
+    const fn is_truthy(&self, literal: &Literal) -> bool {
         !matches!(literal, Literal::Nil | Literal::Bool(false))
     }
 }
