@@ -39,7 +39,7 @@ impl Interpreter {
             }
             Stmt::If(condition, then_branch, else_branch) => {
                 if let Ok(literal) = self.evaluate(condition) {
-                    if self.is_truthy(&literal) {
+                    if Self::is_truthy(&literal) {
                         self.execute(*then_branch);
                     } else if else_branch != None {
                         self.execute(*else_branch.unwrap());
@@ -90,7 +90,7 @@ impl Interpreter {
                 Literal::Number(number) => Ok(Literal::Number(-number)),
                 _ => Err(RuntimeError {}),
             },
-            TokenType::Bang => Ok(Literal::Bool(!self.is_truthy(&result))),
+            TokenType::Bang => Ok(Literal::Bool(!Self::is_truthy(&result))),
             _ => Err(RuntimeError {}),
         }
     }
@@ -139,7 +139,7 @@ impl Interpreter {
         }
     }
 
-    const fn is_truthy(&self, literal: &Literal) -> bool {
+    const fn is_truthy(literal: &Literal) -> bool {
         !matches!(literal, Literal::Nil | Literal::Bool(false))
     }
 }
@@ -399,12 +399,11 @@ mod tests {
 
     #[test]
     fn is_truthy() {
-        let interpreter = Interpreter::new();
-        assert_eq!(false, interpreter.is_truthy(&Literal::Nil));
-        assert_eq!(false, interpreter.is_truthy(&Literal::Bool(false)));
-        assert_eq!(true, interpreter.is_truthy(&Literal::Bool(true)));
-        assert_eq!(true, interpreter.is_truthy(&Literal::Number(0.0)));
-        assert_eq!(true, interpreter.is_truthy(&Literal::String("".to_string())));
+        assert_eq!(false, Interpreter::is_truthy(&Literal::Nil));
+        assert_eq!(false, Interpreter::is_truthy(&Literal::Bool(false)));
+        assert_eq!(true, Interpreter::is_truthy(&Literal::Bool(true)));
+        assert_eq!(true, Interpreter::is_truthy(&Literal::Number(0.0)));
+        assert_eq!(true, Interpreter::is_truthy(&Literal::String("".to_string())));
     }
 
     fn token(token_type: TokenType) -> Token {
