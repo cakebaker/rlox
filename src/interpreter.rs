@@ -75,7 +75,19 @@ impl Interpreter {
                 left,
                 operator,
                 right,
-            } => Err(RuntimeError {}), // TODO implement
+            } => {
+                let left_result = self.evaluate(*left)?;
+
+                if operator.token_type == TokenType::Or {
+                    if Self::is_truthy(&left_result) {
+                        return Ok(left_result);
+                    }
+                } else if !Self::is_truthy(&left_result) {
+                    return Ok(left_result);
+                }
+
+                Ok(self.evaluate(*right)?)
+            }
             Expr::Grouping { expression: expr } => self.evaluate(*expr),
             Expr::Unary { operator, right } => self.evaluate_unary(&operator, *right),
             Expr::Binary {
@@ -224,6 +236,54 @@ mod tests {
 
             if let Ok(result) = Interpreter::new().evaluate(expr) {
                 assert_eq!(expected, result);
+            } else {
+                panic!("Interpreter::evaluate() returned unexpected Err");
+            }
+        }
+    }
+
+    #[test]
+    fn evaluate_logical_and() {
+        let left_right_and_expectations = vec![
+            (false, false, false),
+            (false, true, false),
+            (true, false, false),
+            (true, true, true),
+        ];
+
+        for (left, right, expected) in left_right_and_expectations {
+            let expr = Expr::Logical {
+                left: Box::new(Expr::Literal(Literal::Bool(left))),
+                operator: token(TokenType::And),
+                right: Box::new(Expr::Literal(Literal::Bool(right))),
+            };
+
+            if let Ok(result) = Interpreter::new().evaluate(expr) {
+                assert_eq!(Literal::Bool(expected), result);
+            } else {
+                panic!("Interpreter::evaluate() returned unexpected Err");
+            }
+        }
+    }
+
+    #[test]
+    fn evaluate_logical_or() {
+        let left_right_and_expectations = vec![
+            (false, false, false),
+            (false, true, true),
+            (true, false, true),
+            (true, true, true),
+        ];
+
+        for (left, right, expected) in left_right_and_expectations {
+            let expr = Expr::Logical {
+                left: Box::new(Expr::Literal(Literal::Bool(left))),
+                operator: token(TokenType::Or),
+                right: Box::new(Expr::Literal(Literal::Bool(right))),
+            };
+
+            if let Ok(result) = Interpreter::new().evaluate(expr) {
+                assert_eq!(Literal::Bool(expected), result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
             }
@@ -408,7 +468,10 @@ mod tests {
         assert_eq!(false, Interpreter::is_truthy(&Literal::Bool(false)));
         assert_eq!(true, Interpreter::is_truthy(&Literal::Bool(true)));
         assert_eq!(true, Interpreter::is_truthy(&Literal::Number(0.0)));
-        assert_eq!(true, Interpreter::is_truthy(&Literal::String("".to_string())));
+        assert_eq!(
+            true,
+            Interpreter::is_truthy(&Literal::String("".to_string()))
+        );
     }
 
     fn token(token_type: TokenType) -> Token {
