@@ -60,6 +60,7 @@ impl Interpreter {
                     self.environment.define(name.lexeme, value);
                 }
             }
+            Stmt::While(condition, body) => {}, // TODO implement
         }
     }
 
