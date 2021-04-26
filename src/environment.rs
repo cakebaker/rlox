@@ -25,7 +25,7 @@ impl Environment {
         }
     }
 
-    // If the variable is present in the environment (or it's parent environments, if any), it's
+    // If the variable is present in the environment (or its parent environments, if any), its
     // value is updated, and the old value is returned. Otherwise, None is returned.
     pub fn assign(&mut self, name: String, value: Literal) -> Option<Literal> {
         match self.values.get_mut(&name) {
