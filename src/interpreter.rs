@@ -39,7 +39,7 @@ impl Interpreter {
             }
             Stmt::If(condition, then_branch, else_branch) => {
                 if let Ok(literal) = self.evaluate(condition) {
-                    if Self::is_truthy(&literal) {
+                    if literal.is_truthy() {
                         self.execute(*then_branch);
                     } else if else_branch != None {
                         self.execute(*else_branch.unwrap());
@@ -79,11 +79,12 @@ impl Interpreter {
             } => {
                 let left_result = self.evaluate(*left)?;
 
+                // short-circuit, if possible
                 if operator.token_type == TokenType::Or {
-                    if Self::is_truthy(&left_result) {
+                    if left_result.is_truthy() {
                         return Ok(left_result);
                     }
-                } else if !Self::is_truthy(&left_result) {
+                } else if !left_result.is_truthy() {
                     return Ok(left_result);
                 }
 
@@ -108,7 +109,7 @@ impl Interpreter {
                 Literal::Number(number) => Ok(Literal::Number(-number)),
                 _ => Err(RuntimeError {}),
             },
-            TokenType::Bang => Ok(Literal::Bool(!Self::is_truthy(&result))),
+            TokenType::Bang => Ok(Literal::Bool(!&result.is_truthy())),
             _ => Err(RuntimeError {}),
         }
     }
@@ -155,10 +156,6 @@ impl Interpreter {
                 _ => Err(RuntimeError {}),
             },
         }
-    }
-
-    const fn is_truthy(literal: &Literal) -> bool {
-        !matches!(literal, Literal::Nil | Literal::Bool(false))
     }
 }
 
@@ -461,18 +458,6 @@ mod tests {
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
         }
-    }
-
-    #[test]
-    fn is_truthy() {
-        assert_eq!(false, Interpreter::is_truthy(&Literal::Nil));
-        assert_eq!(false, Interpreter::is_truthy(&Literal::Bool(false)));
-        assert_eq!(true, Interpreter::is_truthy(&Literal::Bool(true)));
-        assert_eq!(true, Interpreter::is_truthy(&Literal::Number(0.0)));
-        assert_eq!(
-            true,
-            Interpreter::is_truthy(&Literal::String("".to_string()))
-        );
     }
 
     fn token(token_type: TokenType) -> Token {

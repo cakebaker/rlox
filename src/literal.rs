@@ -19,6 +19,12 @@ impl fmt::Display for Literal {
     }
 }
 
+impl Literal {
+    pub const fn is_truthy(&self) -> bool {
+        !matches!(self, Self::Nil | Self::Bool(false))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Literal;
@@ -30,5 +36,14 @@ mod tests {
         assert_eq!("true", format!("{}", Literal::Bool(true)));
         assert_eq!("false", format!("{}", Literal::Bool(false)));
         assert_eq!("nil", format!("{}", Literal::Nil));
+    }
+
+    #[test]
+    fn is_truthy() {
+        assert_eq!(false, Literal::Nil.is_truthy());
+        assert_eq!(false, Literal::Bool(false).is_truthy());
+        assert_eq!(true, Literal::Bool(true).is_truthy());
+        assert_eq!(true, Literal::Number(0.0).is_truthy());
+        assert_eq!(true, Literal::String("".to_string()).is_truthy());
     }
 }
