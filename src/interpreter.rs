@@ -71,6 +71,11 @@ impl Interpreter {
                 Ok(v)
             }
             Expr::Literal(literal) => Ok(literal),
+            Expr::Logical {
+                left,
+                operator,
+                right,
+            } => Err(RuntimeError {}), // TODO implement
             Expr::Grouping { expression: expr } => self.evaluate(*expr),
             Expr::Unary { operator, right } => self.evaluate_unary(&operator, *right),
             Expr::Binary {
