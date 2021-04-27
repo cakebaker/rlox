@@ -21,11 +21,11 @@ impl Interpreter {
 
     pub fn interpret(&mut self, statements: Vec<Stmt>) {
         for statement in statements {
-            self.execute(statement);
+            self.execute(&statement);
         }
     }
 
-    fn execute(&mut self, statement: Stmt) {
+    fn execute(&mut self, statement: &Stmt) {
         match statement {
             Stmt::Block(statements) => {
                 let previous = self.environment.clone();
@@ -38,46 +38,46 @@ impl Interpreter {
                 self.environment = previous;
             }
             Stmt::If(condition, then_branch, else_branch) => {
-                if let Ok(literal) = self.evaluate(condition) {
+                if let Ok(literal) = self.evaluate(&*condition) {
                     if literal.is_truthy() {
-                        self.execute(*then_branch);
-                    } else if else_branch != None {
-                        self.execute(*else_branch.unwrap());
+                        self.execute(&*then_branch);
+                    } else if *else_branch != None {
+                        self.execute(&*else_branch.as_ref().unwrap());
                     }
                 }
             }
             Stmt::Print(expr) => {
-                if let Ok(result) = self.evaluate(expr) {
+                if let Ok(result) = self.evaluate(&*expr) {
                     println!("{}", result);
                 }
             }
             Stmt::Expr(expr) => {
-                self.evaluate(expr);
+                self.evaluate(&*expr);
             }
-            Stmt::Var(name, None) => self.environment.define(name.lexeme, Literal::Nil),
+            Stmt::Var(name, None) => self.environment.define(name.lexeme.clone(), Literal::Nil),
             Stmt::Var(name, Some(initializer)) => {
-                if let Ok(value) = self.evaluate(initializer) {
-                    self.environment.define(name.lexeme, value);
+                if let Ok(value) = self.evaluate(&*initializer) {
+                    self.environment.define(name.lexeme.clone(), value);
                 }
             }
             Stmt::While(condition, body) => {}, // TODO implement
         }
     }
 
-    fn evaluate(&mut self, expr: Expr) -> Result<Literal, RuntimeError> {
+    fn evaluate(&mut self, expr: &Expr) -> Result<Literal, RuntimeError> {
         match expr {
             Expr::Assign { name, value } => {
-                let v = self.evaluate(*value)?;
-                self.environment.assign(name.lexeme, v.clone());
+                let v = self.evaluate(&*value)?;
+                self.environment.assign(name.lexeme.clone(), v.clone());
                 Ok(v)
             }
-            Expr::Literal(literal) => Ok(literal),
+            Expr::Literal(literal) => Ok(literal.clone()),
             Expr::Logical {
                 left,
                 operator,
                 right,
             } => {
-                let left_result = self.evaluate(*left)?;
+                let left_result = self.evaluate(&*left)?;
 
                 // short-circuit, if possible
                 if operator.token_type == TokenType::Or {
@@ -88,20 +88,20 @@ impl Interpreter {
                     return Ok(left_result);
                 }
 
-                Ok(self.evaluate(*right)?)
+                Ok(self.evaluate(&*right)?)
             }
-            Expr::Grouping { expression: expr } => self.evaluate(*expr),
-            Expr::Unary { operator, right } => self.evaluate_unary(&operator, *right),
+            Expr::Grouping { expression: expr } => self.evaluate(&*expr),
+            Expr::Unary { operator, right } => self.evaluate_unary(&operator, &*right),
             Expr::Binary {
                 left,
                 operator,
                 right,
-            } => self.evaluate_binary(*left, &operator, *right),
-            Expr::Variable(name) => self.environment.get(name.lexeme),
+            } => self.evaluate_binary(left, &operator, right),
+            Expr::Variable(name) => self.environment.get(name.lexeme.clone()),
         }
     }
 
-    fn evaluate_unary(&mut self, operator: &Token, right: Expr) -> Result<Literal, RuntimeError> {
+    fn evaluate_unary(&mut self, operator: &Token, right: &Expr) -> Result<Literal, RuntimeError> {
         let result = self.evaluate(right)?;
 
         match operator.token_type {
@@ -116,9 +116,9 @@ impl Interpreter {
 
     fn evaluate_binary(
         &mut self,
-        left: Expr,
+        left: &Expr,
         operator: &Token,
-        right: Expr,
+        right: &Expr,
     ) -> Result<Literal, RuntimeError> {
         match (self.evaluate(left)?, self.evaluate(right)?) {
             (Literal::Number(l), Literal::Number(r)) => match operator.token_type {
@@ -180,7 +180,7 @@ mod tests {
 
         for literal in literals {
             let expr = Expr::Literal(literal.clone());
-            if let Ok(result) = Interpreter::new().evaluate(expr) {
+            if let Ok(result) = Interpreter::new().evaluate(&expr) {
                 assert_eq!(literal, result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
@@ -195,7 +195,7 @@ mod tests {
             expression: Box::new(Expr::Literal(literal.clone())),
         };
 
-        if let Ok(result) = Interpreter::new().evaluate(expr) {
+        if let Ok(result) = Interpreter::new().evaluate(&expr) {
             assert_eq!(literal, result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
@@ -209,7 +209,7 @@ mod tests {
             right: Box::new(Expr::Literal(Literal::Number(1.0))),
         };
 
-        if let Ok(result) = Interpreter::new().evaluate(expr) {
+        if let Ok(result) = Interpreter::new().evaluate(&expr) {
             assert_eq!(Literal::Number(-1.0), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
@@ -232,7 +232,7 @@ mod tests {
                 right: Box::new(Expr::Literal(literal)),
             };
 
-            if let Ok(result) = Interpreter::new().evaluate(expr) {
+            if let Ok(result) = Interpreter::new().evaluate(&expr) {
                 assert_eq!(expected, result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
@@ -256,7 +256,7 @@ mod tests {
                 right: Box::new(Expr::Literal(Literal::Bool(right))),
             };
 
-            if let Ok(result) = Interpreter::new().evaluate(expr) {
+            if let Ok(result) = Interpreter::new().evaluate(&expr) {
                 assert_eq!(Literal::Bool(expected), result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
@@ -280,7 +280,7 @@ mod tests {
                 right: Box::new(Expr::Literal(Literal::Bool(right))),
             };
 
-            if let Ok(result) = Interpreter::new().evaluate(expr) {
+            if let Ok(result) = Interpreter::new().evaluate(&expr) {
                 assert_eq!(Literal::Bool(expected), result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
@@ -307,7 +307,7 @@ mod tests {
                 right: Box::new(Expr::Literal(RIGHT)),
             };
 
-            if let Ok(result) = Interpreter::new().evaluate(expr) {
+            if let Ok(result) = Interpreter::new().evaluate(&expr) {
                 assert_eq!(expected, result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
@@ -323,7 +323,7 @@ mod tests {
             right: Box::new(Expr::Literal(Literal::String("bb".to_string()))),
         };
 
-        if let Ok(result) = Interpreter::new().evaluate(expr) {
+        if let Ok(result) = Interpreter::new().evaluate(&expr) {
             assert_eq!(Literal::String("aabb".to_string()), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
@@ -357,7 +357,7 @@ mod tests {
                 right: Box::new(Expr::Literal(right)),
             };
 
-            if let Ok(result) = Interpreter::new().evaluate(expr) {
+            if let Ok(result) = Interpreter::new().evaluate(&expr) {
                 assert_eq!(Literal::Bool(expected), result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
@@ -400,7 +400,7 @@ mod tests {
                     right: Box::new(Expr::Literal(right.clone())),
                 };
 
-                if let Ok(result) = Interpreter::new().evaluate(expr) {
+                if let Ok(result) = Interpreter::new().evaluate(&expr) {
                     assert_eq!(Literal::Bool(expected), result);
                 } else {
                     panic!("Interpreter::evaluate() returned unexpected Err");
@@ -420,7 +420,7 @@ mod tests {
 
         let expr = Expr::Variable(token(TokenType::String("test".to_string())));
 
-        if let Ok(result) = interpreter.evaluate(expr) {
+        if let Ok(result) = interpreter.evaluate(&expr) {
             assert_eq!(Literal::String("value".to_string()), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
@@ -431,7 +431,7 @@ mod tests {
     fn evaluate_undefined_variable() {
         let expr = Expr::Variable(token(TokenType::String("test".to_string())));
 
-        if let Err(e) = Interpreter::new().evaluate(expr) {
+        if let Err(e) = Interpreter::new().evaluate(&expr) {
             assert!(true);
         } else {
             panic!("Interpreter::evaluate() didn't return an Err");
@@ -453,7 +453,7 @@ mod tests {
 
         let expr = Expr::Variable(token(TokenType::String("test".to_string())));
 
-        if let Ok(result) = interpreter.evaluate(expr) {
+        if let Ok(result) = interpreter.evaluate(&expr) {
             assert_eq!(Literal::String("updated".to_string()), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
