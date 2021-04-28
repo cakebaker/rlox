@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Environment {
     parent: Option<Rc<RefCell<Environment>>>,
     values: HashMap<String, Literal>,
@@ -59,6 +59,17 @@ impl Environment {
                 }
                 None => Err(RuntimeError {}),
             },
+        }
+    }
+
+    // Takes the parent, leaving None in its place.
+    pub fn take_parent(&mut self) -> Option<Self> {
+        if self.parent.is_none() {
+            None
+        } else {
+            let parent = Some(self.parent.as_ref().unwrap().take());
+            self.parent = None;
+            parent
         }
     }
 }
@@ -153,5 +164,22 @@ mod tests {
         } else {
             panic!("Environment::get() didn't return expected Err");
         }
+    }
+
+    #[test]
+    fn take_parent() {
+        let parent = Environment::new();
+        let mut env = Environment::new_with_parent(parent.clone());
+
+        let mut result = env.take_parent().unwrap();
+        assert_eq!(parent, result);
+        assert!(env.take_parent().is_none());
+    }
+
+    #[test]
+    fn take_parent_if_there_is_none() {
+        let result = Environment::new().take_parent();
+
+        assert!(result.is_none());
     }
 }
