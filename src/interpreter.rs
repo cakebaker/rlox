@@ -102,12 +102,12 @@ impl Interpreter {
                 Ok(self.evaluate(&*right)?)
             }
             Expr::Grouping { expression: expr } => self.evaluate(&*expr),
-            Expr::Unary { operator, right } => self.evaluate_unary(&operator, &*right),
+            Expr::Unary { operator, right } => self.evaluate_unary(operator, &*right),
             Expr::Binary {
                 left,
                 operator,
                 right,
-            } => self.evaluate_binary(left, &operator, right),
+            } => self.evaluate_binary(left, operator, right),
             Expr::Variable(name) => self.environment.get(name.lexeme.clone()),
         }
     }
