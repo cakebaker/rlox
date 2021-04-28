@@ -28,14 +28,15 @@ impl Interpreter {
     fn execute(&mut self, statement: &Stmt) {
         match statement {
             Stmt::Block(statements) => {
-                let previous = self.environment.clone();
                 self.environment = Environment::new_with_parent(self.environment.clone());
 
                 for statement in statements {
                     self.execute(statement);
                 }
 
-                self.environment = previous;
+                if let Some(parent) = self.environment.take_parent() {
+                    self.environment = parent;
+                }
             }
             Stmt::If(condition, then_branch, else_branch) => {
                 if let Ok(literal) = self.evaluate(&*condition) {
@@ -60,8 +61,18 @@ impl Interpreter {
                     self.environment.define(name.lexeme.clone(), value);
                 }
             }
-            Stmt::While(condition, body) => {}, // TODO implement
+            Stmt::While(condition, body) => {
+                self.execute_while(condition, body);
+            }
         }
+    }
+
+    fn execute_while(&mut self, condition: &Expr, body: &Stmt) -> Result<(), RuntimeError> {
+        while self.evaluate(condition)?.is_truthy() {
+            self.execute(body);
+        }
+
+        Ok(())
     }
 
     fn evaluate(&mut self, expr: &Expr) -> Result<Literal, RuntimeError> {
