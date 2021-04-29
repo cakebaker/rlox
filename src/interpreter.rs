@@ -82,6 +82,11 @@ impl Interpreter {
                 self.environment.assign(name.lexeme.clone(), v.clone());
                 Ok(v)
             }
+            Expr::Call {
+                callee,
+                paren,
+                arguments,
+            } => Err(RuntimeError {}), // TODO implement
             Expr::Literal(literal) => Ok(literal.clone()),
             Expr::Logical {
                 left,
