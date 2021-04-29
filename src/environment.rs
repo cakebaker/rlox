@@ -171,7 +171,7 @@ mod tests {
         let parent = Environment::new();
         let mut env = Environment::new_with_parent(parent.clone());
 
-        let mut result = env.take_parent().unwrap();
+        let result = env.take_parent().unwrap();
         assert_eq!(parent, result);
         assert!(env.take_parent().is_none());
     }
