@@ -38,6 +38,9 @@ impl Interpreter {
                     self.environment = parent;
                 }
             }
+            Stmt::Expr(expr) => {
+                self.evaluate(&*expr);
+            }
             Stmt::If(condition, then_branch, else_branch) => {
                 if let Ok(literal) = self.evaluate(&*condition) {
                     if literal.is_truthy() {
@@ -51,9 +54,6 @@ impl Interpreter {
                 if let Ok(result) = self.evaluate(&*expr) {
                     println!("{}", result);
                 }
-            }
-            Stmt::Expr(expr) => {
-                self.evaluate(&*expr);
             }
             Stmt::Var(name, None) => self.environment.define(name.lexeme.clone(), Literal::Nil),
             Stmt::Var(name, Some(initializer)) => {
@@ -82,11 +82,17 @@ impl Interpreter {
                 self.environment.assign(name.lexeme.clone(), v.clone());
                 Ok(v)
             }
+            Expr::Binary {
+                left,
+                operator,
+                right,
+            } => self.evaluate_binary(left, operator, right),
             Expr::Call {
                 callee,
                 paren,
                 arguments,
             } => Err(RuntimeError {}), // TODO implement
+            Expr::Grouping { expression: expr } => self.evaluate(&*expr),
             Expr::Literal(literal) => Ok(literal.clone()),
             Expr::Logical {
                 left,
@@ -106,13 +112,7 @@ impl Interpreter {
 
                 Ok(self.evaluate(&*right)?)
             }
-            Expr::Grouping { expression: expr } => self.evaluate(&*expr),
             Expr::Unary { operator, right } => self.evaluate_unary(operator, &*right),
-            Expr::Binary {
-                left,
-                operator,
-                right,
-            } => self.evaluate_binary(left, operator, right),
             Expr::Variable(name) => self.environment.get(name.lexeme.clone()),
         }
     }
