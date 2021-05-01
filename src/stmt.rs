@@ -5,6 +5,7 @@ use crate::token::Token;
 pub enum Stmt {
     Block(Vec<Stmt>),
     Expr(Expr),
+    Function(Token, Vec<Token>, Vec<Stmt>),
     If(Expr, Box<Stmt>, Option<Box<Stmt>>),
     Print(Expr),
     Var(Token, Option<Expr>),

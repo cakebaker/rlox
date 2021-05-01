@@ -42,10 +42,48 @@ impl Parser {
     }
 
     fn declaration(&mut self) -> Result<Stmt, ParseError> {
-        if self.do_match(vec![TokenType::Var]) {
+        if self.do_match(vec![TokenType::Fun]) {
+            self.function("function")
+        } else if self.do_match(vec![TokenType::Var]) {
             self.var_declaration()
         } else {
             self.statement()
+        }
+    }
+
+    fn function(&mut self, kind: &str) -> Result<Stmt, ParseError> {
+        let name = self.consume(
+            TokenType::Identifier,
+            format!("Expect {} name.", kind).as_str(),
+        )?;
+
+        self.consume(
+            TokenType::LeftParen,
+            format!("Expect '(' after {} name.", kind).as_str(),
+        )?;
+        let mut parameters = Vec::new();
+
+        if !self.check(TokenType::RightParen) {
+            loop {
+                parameters.push(self.consume(TokenType::Identifier, "Expect parameter name.")?);
+
+                if self.do_match(vec![TokenType::Comma]) {
+                    break;
+                }
+            }
+        }
+
+        self.consume(TokenType::RightParen, "Expect ')' after parameters.");
+        self.consume(
+            TokenType::LeftBrace,
+            format!("Expect '{{' before {} body.", kind).as_str(),
+        );
+
+        if let Stmt::Block(body) = self.block_statement()? {
+            Ok(Stmt::Function(name, parameters, body))
+        } else {
+            // unreachable code, needed to make the compiler happy
+            Err(ParseError::new(TokenType::LeftBrace, ""))
         }
     }
 

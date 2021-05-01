@@ -50,6 +50,7 @@ impl Interpreter {
                     }
                 }
             }
+            Stmt::Function(name, params, body) => {} // TODO implement
             Stmt::Print(expr) => {
                 if let Ok(result) = self.evaluate(&*expr) {
                     println!("{}", result);
