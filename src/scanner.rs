@@ -127,7 +127,7 @@ impl Scanner {
             .take_while(|c| c.is_ascii_alphabetic() || *c == '_')
             .collect();
 
-        let token_type = match TokenType::get_type_for_keyword(&identifier) {
+        let token_type = match Self::get_type_if_keyword(&identifier) {
             Some(keyword_type) => keyword_type,
             None => TokenType::Identifier,
         };
@@ -155,6 +155,29 @@ impl Scanner {
             number.to_string(),
             line,
         )
+    }
+
+
+    fn get_type_if_keyword(keyword: &str) -> Option<TokenType> {
+        match keyword {
+            "and" => Some(TokenType::And),
+            "class" => Some(TokenType::Class),
+            "else" => Some(TokenType::Else),
+            "false" => Some(TokenType::False),
+            "fun" => Some(TokenType::Fun),
+            "for" => Some(TokenType::For),
+            "if" => Some(TokenType::If),
+            "nil" => Some(TokenType::Nil),
+            "or" => Some(TokenType::Or),
+            "print" => Some(TokenType::Print),
+            "return" => Some(TokenType::Return),
+            "super" => Some(TokenType::Super),
+            "this" => Some(TokenType::This),
+            "true" => Some(TokenType::True),
+            "var" => Some(TokenType::Var),
+            "while" => Some(TokenType::While),
+            _ => None,
+        }
     }
 }
 
