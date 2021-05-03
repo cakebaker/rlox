@@ -157,7 +157,6 @@ impl Scanner {
         )
     }
 
-
     fn get_type_if_keyword(keyword: &str) -> Option<TokenType> {
         match keyword {
             "and" => Some(TokenType::And),
