@@ -1,5 +1,5 @@
 use crate::interpreter::RuntimeError;
-use crate::literal::Literal;
+use crate::value::Value;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -7,7 +7,7 @@ use std::rc::Rc;
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Environment {
     parent: Option<Rc<RefCell<Environment>>>,
-    values: HashMap<String, Literal>,
+    values: HashMap<String, Value>,
 }
 
 impl Environment {
@@ -27,7 +27,7 @@ impl Environment {
 
     // If the variable is present in the environment (or its parent environments, if any), its
     // value is updated, and the old value is returned. Otherwise, None is returned.
-    pub fn assign(&mut self, name: String, value: Literal) -> Option<Literal> {
+    pub fn assign(&mut self, name: String, value: Value) -> Option<Value> {
         match self.values.get_mut(&name) {
             Some(x) => {
                 let old_value = x.clone();
@@ -45,11 +45,11 @@ impl Environment {
         }
     }
 
-    pub fn define(&mut self, name: String, value: Literal) {
+    pub fn define(&mut self, name: String, value: Value) {
         self.values.insert(name, value);
     }
 
-    pub fn get(&self, name: String) -> Result<Literal, RuntimeError> {
+    pub fn get(&self, name: String) -> Result<Value, RuntimeError> {
         match self.values.get(&name) {
             Some(literal) => Ok(literal.clone()),
             None => match &self.parent {
@@ -77,23 +77,23 @@ impl Environment {
 #[cfg(test)]
 mod tests {
     use super::Environment;
-    use crate::literal::Literal;
+    use crate::value::Value;
 
     #[test]
     fn assign_value_to_var() {
         let mut env = Environment::new();
-        env.define("key".to_string(), Literal::String("value".to_string()));
+        env.define("key".to_string(), Value::String("value".to_string()));
 
         if let Some(previous_value) =
-            env.assign("key".to_string(), Literal::String("new value".to_string()))
+            env.assign("key".to_string(), Value::String("new value".to_string()))
         {
-            assert_eq!(previous_value, Literal::String("value".to_string()));
+            assert_eq!(previous_value, Value::String("value".to_string()));
         } else {
             panic!("Environment::assign() returned unexpected None");
         }
 
         if let Ok(result) = env.get("key".to_string()) {
-            assert_eq!(Literal::String("new value".to_string()), result);
+            assert_eq!(Value::String("new value".to_string()), result);
         } else {
             panic!("Environment::get() returned unexpected Err");
         }
@@ -102,20 +102,20 @@ mod tests {
     #[test]
     fn assign_value_to_var_from_parent_environment() {
         let mut parent = Environment::new();
-        parent.define("key".to_string(), Literal::String("value".to_string()));
+        parent.define("key".to_string(), Value::String("value".to_string()));
 
         let mut env = Environment::new_with_parent(parent);
 
         if let Some(previous_value) =
-            env.assign("key".to_string(), Literal::String("new value".to_string()))
+            env.assign("key".to_string(), Value::String("new value".to_string()))
         {
-            assert_eq!(previous_value, Literal::String("value".to_string()));
+            assert_eq!(previous_value, Value::String("value".to_string()));
         } else {
             panic!("Environment::assign() returned unexpected None");
         }
 
         if let Ok(result) = env.get("key".to_string()) {
-            assert_eq!(Literal::String("new value".to_string()), result);
+            assert_eq!(Value::String("new value".to_string()), result);
         } else {
             panic!("Environment::get() returned unexpected Err");
         }
@@ -124,7 +124,7 @@ mod tests {
     #[test]
     fn assign_value_to_undefined_var() {
         let mut env = Environment::new();
-        let previous_value = env.assign("key".to_string(), Literal::String("value".to_string()));
+        let previous_value = env.assign("key".to_string(), Value::String("value".to_string()));
 
         assert_eq!(previous_value, None);
     }
@@ -132,10 +132,10 @@ mod tests {
     #[test]
     fn get_value_of_var() {
         let mut env = Environment::new();
-        env.define("key".to_string(), Literal::String("value".to_string()));
+        env.define("key".to_string(), Value::String("value".to_string()));
 
         if let Ok(result) = env.get("key".to_string()) {
-            assert_eq!(Literal::String("value".to_string()), result);
+            assert_eq!(Value::String("value".to_string()), result);
         } else {
             panic!("Environment::get() returned unexpected Err");
         }
@@ -144,12 +144,12 @@ mod tests {
     #[test]
     fn get_value_of_var_from_parent_environment() {
         let mut parent = Environment::new();
-        parent.define("key".to_string(), Literal::String("value".to_string()));
+        parent.define("key".to_string(), Value::String("value".to_string()));
 
         let env = Environment::new_with_parent(parent);
 
         if let Ok(result) = env.get("key".to_string()) {
-            assert_eq!(Literal::String("value".to_string()), result);
+            assert_eq!(Value::String("value".to_string()), result);
         } else {
             panic!("Environment::get() returned unexpected Err");
         }

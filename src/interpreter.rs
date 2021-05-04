@@ -4,6 +4,7 @@ use crate::literal::Literal;
 use crate::stmt::Stmt;
 use crate::token::Token;
 use crate::token_type::TokenType;
+use crate::value::Value;
 
 #[derive(Debug)]
 pub struct RuntimeError {}
@@ -56,7 +57,7 @@ impl Interpreter {
                     println!("{}", result);
                 }
             }
-            Stmt::Var(name, None) => self.environment.define(name.lexeme.clone(), Literal::Nil),
+            Stmt::Var(name, None) => self.environment.define(name.lexeme.clone(), Value::Nil),
             Stmt::Var(name, Some(initializer)) => {
                 if let Ok(value) = self.evaluate(&*initializer) {
                     self.environment.define(name.lexeme.clone(), value);
@@ -76,7 +77,7 @@ impl Interpreter {
         Ok(())
     }
 
-    fn evaluate(&mut self, expr: &Expr) -> Result<Literal, RuntimeError> {
+    fn evaluate(&mut self, expr: &Expr) -> Result<Value, RuntimeError> {
         match expr {
             Expr::Assign { name, value } => {
                 let v = self.evaluate(&*value)?;
@@ -94,7 +95,10 @@ impl Interpreter {
                 arguments,
             } => Err(RuntimeError {}), // TODO implement
             Expr::Grouping { expression: expr } => self.evaluate(&*expr),
-            Expr::Literal(literal) => Ok(literal.clone()),
+            Expr::Literal(Literal::Bool(bool)) => Ok(Value::Bool(*bool)),
+            Expr::Literal(Literal::Nil) => Ok(Value::Nil),
+            Expr::Literal(Literal::Number(number)) => Ok(Value::Number(*number)),
+            Expr::Literal(Literal::String(string)) => Ok(Value::String(string.clone())),
             Expr::Logical {
                 left,
                 operator,
@@ -118,15 +122,15 @@ impl Interpreter {
         }
     }
 
-    fn evaluate_unary(&mut self, operator: &Token, right: &Expr) -> Result<Literal, RuntimeError> {
+    fn evaluate_unary(&mut self, operator: &Token, right: &Expr) -> Result<Value, RuntimeError> {
         let result = self.evaluate(right)?;
 
         match operator.token_type {
             TokenType::Minus => match result {
-                Literal::Number(number) => Ok(Literal::Number(-number)),
+                Value::Number(number) => Ok(Value::Number(-number)),
                 _ => Err(RuntimeError {}),
             },
-            TokenType::Bang => Ok(Literal::Bool(!&result.is_truthy())),
+            TokenType::Bang => Ok(Value::Bool(!&result.is_truthy())),
             _ => Err(RuntimeError {}),
         }
     }
@@ -136,40 +140,40 @@ impl Interpreter {
         left: &Expr,
         operator: &Token,
         right: &Expr,
-    ) -> Result<Literal, RuntimeError> {
+    ) -> Result<Value, RuntimeError> {
         match (self.evaluate(left)?, self.evaluate(right)?) {
-            (Literal::Number(l), Literal::Number(r)) => match operator.token_type {
-                TokenType::Plus => Ok(Literal::Number(l + r)),
-                TokenType::Minus => Ok(Literal::Number(l - r)),
-                TokenType::Star => Ok(Literal::Number(l * r)),
-                TokenType::Slash => Ok(Literal::Number(l / r)),
-                TokenType::Greater => Ok(Literal::Bool(l > r)),
-                TokenType::GreaterEqual => Ok(Literal::Bool(l >= r)),
-                TokenType::Less => Ok(Literal::Bool(l < r)),
-                TokenType::LessEqual => Ok(Literal::Bool(l <= r)),
-                TokenType::EqualEqual => Ok(Literal::Bool(l == r)),
-                TokenType::BangEqual => Ok(Literal::Bool(l != r)),
+            (Value::Number(l), Value::Number(r)) => match operator.token_type {
+                TokenType::Plus => Ok(Value::Number(l + r)),
+                TokenType::Minus => Ok(Value::Number(l - r)),
+                TokenType::Star => Ok(Value::Number(l * r)),
+                TokenType::Slash => Ok(Value::Number(l / r)),
+                TokenType::Greater => Ok(Value::Bool(l > r)),
+                TokenType::GreaterEqual => Ok(Value::Bool(l >= r)),
+                TokenType::Less => Ok(Value::Bool(l < r)),
+                TokenType::LessEqual => Ok(Value::Bool(l <= r)),
+                TokenType::EqualEqual => Ok(Value::Bool(l == r)),
+                TokenType::BangEqual => Ok(Value::Bool(l != r)),
                 _ => Err(RuntimeError {}),
             },
-            (Literal::String(l), Literal::String(r)) => match operator.token_type {
-                TokenType::Plus => Ok(Literal::String(format!("{}{}", l, r))),
-                TokenType::EqualEqual => Ok(Literal::Bool(l == r)),
-                TokenType::BangEqual => Ok(Literal::Bool(l != r)),
+            (Value::String(l), Value::String(r)) => match operator.token_type {
+                TokenType::Plus => Ok(Value::String(format!("{}{}", l, r))),
+                TokenType::EqualEqual => Ok(Value::Bool(l == r)),
+                TokenType::BangEqual => Ok(Value::Bool(l != r)),
                 _ => Err(RuntimeError {}),
             },
-            (Literal::Bool(l), Literal::Bool(r)) => match operator.token_type {
-                TokenType::EqualEqual => Ok(Literal::Bool(l == r)),
-                TokenType::BangEqual => Ok(Literal::Bool(l != r)),
+            (Value::Bool(l), Value::Bool(r)) => match operator.token_type {
+                TokenType::EqualEqual => Ok(Value::Bool(l == r)),
+                TokenType::BangEqual => Ok(Value::Bool(l != r)),
                 _ => Err(RuntimeError {}),
             },
-            (Literal::Nil, Literal::Nil) => match operator.token_type {
-                TokenType::EqualEqual => Ok(Literal::Bool(true)),
-                TokenType::BangEqual => Ok(Literal::Bool(false)),
+            (Value::Nil, Value::Nil) => match operator.token_type {
+                TokenType::EqualEqual => Ok(Value::Bool(true)),
+                TokenType::BangEqual => Ok(Value::Bool(false)),
                 _ => Err(RuntimeError {}),
             },
             _ => match operator.token_type {
-                TokenType::EqualEqual => Ok(Literal::Bool(false)),
-                TokenType::BangEqual => Ok(Literal::Bool(true)),
+                TokenType::EqualEqual => Ok(Value::Bool(false)),
+                TokenType::BangEqual => Ok(Value::Bool(true)),
                 _ => Err(RuntimeError {}),
             },
         }
@@ -184,21 +188,25 @@ mod tests {
     use crate::stmt::Stmt;
     use crate::token::Token;
     use crate::token_type::TokenType;
+    use crate::value::Value;
 
     #[test]
     fn evaluate_literals() {
-        let literals = vec![
-            Literal::Bool(true),
-            Literal::Bool(false),
-            Literal::Nil,
-            Literal::Number(1.0),
-            Literal::String("str".to_string()),
+        let literals_and_expectations = vec![
+            (Literal::Bool(true), Value::Bool(true)),
+            (Literal::Bool(false), Value::Bool(false)),
+            (Literal::Nil, Value::Nil),
+            (Literal::Number(1.0), Value::Number(1.0)),
+            (
+                Literal::String("str".to_string()),
+                Value::String("str".to_string()),
+            ),
         ];
 
-        for literal in literals {
-            let expr = Expr::Literal(literal.clone());
+        for (literal, expected) in literals_and_expectations {
+            let expr = Expr::Literal(literal);
             if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                assert_eq!(literal, result);
+                assert_eq!(expected, result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
             }
@@ -207,13 +215,12 @@ mod tests {
 
     #[test]
     fn evaluate_grouping() {
-        let literal = Literal::Bool(true);
         let expr = Expr::Grouping {
-            expression: Box::new(Expr::Literal(literal.clone())),
+            expression: Box::new(Expr::Literal(Literal::Bool(true))),
         };
 
         if let Ok(result) = Interpreter::new().evaluate(&expr) {
-            assert_eq!(literal, result);
+            assert_eq!(Value::Bool(true), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
         }
@@ -227,7 +234,7 @@ mod tests {
         };
 
         if let Ok(result) = Interpreter::new().evaluate(&expr) {
-            assert_eq!(Literal::Number(-1.0), result);
+            assert_eq!(Value::Number(-1.0), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
         }
@@ -236,11 +243,11 @@ mod tests {
     #[test]
     fn evaluate_logical_not() {
         let literals = vec![
-            (Literal::Nil, Literal::Bool(true)),
-            (Literal::Bool(false), Literal::Bool(true)),
-            (Literal::Bool(true), Literal::Bool(false)),
-            (Literal::Number(1.0), Literal::Bool(false)),
-            (Literal::String("str".to_string()), Literal::Bool(false)),
+            (Literal::Nil, Value::Bool(true)),
+            (Literal::Bool(false), Value::Bool(true)),
+            (Literal::Bool(true), Value::Bool(false)),
+            (Literal::Number(1.0), Value::Bool(false)),
+            (Literal::String("str".to_string()), Value::Bool(false)),
         ];
 
         for (literal, expected) in literals {
@@ -274,7 +281,7 @@ mod tests {
             };
 
             if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                assert_eq!(Literal::Bool(expected), result);
+                assert_eq!(Value::Bool(expected), result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
             }
@@ -298,7 +305,7 @@ mod tests {
             };
 
             if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                assert_eq!(Literal::Bool(expected), result);
+                assert_eq!(Value::Bool(expected), result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
             }
@@ -311,10 +318,10 @@ mod tests {
         const RIGHT: Literal = Literal::Number(2.0);
 
         let operators_and_expectations = vec![
-            (TokenType::Minus, Literal::Number(1.0)),
-            (TokenType::Plus, Literal::Number(5.0)),
-            (TokenType::Star, Literal::Number(6.0)),
-            (TokenType::Slash, Literal::Number(1.5)),
+            (TokenType::Minus, Value::Number(1.0)),
+            (TokenType::Plus, Value::Number(5.0)),
+            (TokenType::Star, Value::Number(6.0)),
+            (TokenType::Slash, Value::Number(1.5)),
         ];
 
         for (operator, expected) in operators_and_expectations {
@@ -341,7 +348,7 @@ mod tests {
         };
 
         if let Ok(result) = Interpreter::new().evaluate(&expr) {
-            assert_eq!(Literal::String("aabb".to_string()), result);
+            assert_eq!(Value::String("aabb".to_string()), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
         }
@@ -375,7 +382,7 @@ mod tests {
             };
 
             if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                assert_eq!(Literal::Bool(expected), result);
+                assert_eq!(Value::Bool(expected), result);
             } else {
                 panic!("Interpreter::evaluate() returned unexpected Err");
             }
@@ -418,7 +425,7 @@ mod tests {
                 };
 
                 if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                    assert_eq!(Literal::Bool(expected), result);
+                    assert_eq!(Value::Bool(expected), result);
                 } else {
                     panic!("Interpreter::evaluate() returned unexpected Err");
                 }
@@ -438,7 +445,7 @@ mod tests {
         let expr = Expr::Variable(token(TokenType::String("test".to_string())));
 
         if let Ok(result) = interpreter.evaluate(&expr) {
-            assert_eq!(Literal::String("value".to_string()), result);
+            assert_eq!(Value::String("value".to_string()), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
         }
@@ -471,7 +478,7 @@ mod tests {
         let expr = Expr::Variable(token(TokenType::String("test".to_string())));
 
         if let Ok(result) = interpreter.evaluate(&expr) {
-            assert_eq!(Literal::String("updated".to_string()), result);
+            assert_eq!(Value::String("updated".to_string()), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
         }
