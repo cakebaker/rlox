@@ -2,10 +2,10 @@ use std::fmt;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
-    String(String),
-    Number(f64),
     Bool(bool),
     Nil,
+    Number(f64),
+    String(String),
 }
 
 impl fmt::Display for Value {
