@@ -11,10 +11,10 @@ pub enum Value {
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::String(string) => write!(f, "{}", string),
-            Self::Number(number) => write!(f, "{}", number),
             Self::Bool(bool) => write!(f, "{}", bool),
             Self::Nil => write!(f, "nil"),
+            Self::Number(number) => write!(f, "{}", number),
+            Self::String(string) => write!(f, "{}", string),
         }
     }
 }
