@@ -135,6 +135,7 @@ impl Interpreter {
         }
     }
 
+    #[allow(clippy::float_cmp)]
     fn evaluate_binary(
         &mut self,
         left: &Expr,
