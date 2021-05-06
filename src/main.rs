@@ -1,9 +1,11 @@
 #![warn(clippy::all, clippy::nursery, clippy::pedantic)]
 
+mod clock;
 mod environment;
 mod expr;
 mod interpreter;
 mod literal;
+mod lox_callable;
 mod parser;
 mod reporter;
 mod scanner;
