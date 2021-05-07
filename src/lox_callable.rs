@@ -9,7 +9,7 @@ pub trait LoxCallable: CallableClone {
 }
 
 // workaround based on https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object/30353928
-trait CallableClone {
+pub trait CallableClone {
     fn clone_box(&self) -> Box<dyn LoxCallable>;
 }
 
