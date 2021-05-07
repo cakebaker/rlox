@@ -1,8 +1,11 @@
 use std::fmt;
 
+use crate::lox_callable::LoxCallable;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     Bool(bool),
+    Function(Box<dyn LoxCallable>),
     Nil,
     Number(f64),
     String(String),
@@ -12,6 +15,7 @@ impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Bool(bool) => write!(f, "{}", bool),
+            Self::Function(function) => write!(f, "{:?}", function), // XXX what should the output be?
             Self::Nil => write!(f, "nil"),
             Self::Number(number) => write!(f, "{}", number),
             Self::String(string) => write!(f, "{}", string),

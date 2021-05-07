@@ -1,3 +1,4 @@
+use crate::clock::Clock;
 use crate::environment::Environment;
 use crate::expr::Expr;
 use crate::literal::Literal;
@@ -15,9 +16,10 @@ pub struct Interpreter {
 
 impl Interpreter {
     pub fn new() -> Self {
-        Self {
-            environment: Environment::new(),
-        }
+        let mut env = Environment::new();
+        env.define("clock".to_string(), Value::Function(Box::new(Clock::new())));
+
+        Self { environment: env }
     }
 
     pub fn interpret(&mut self, statements: Vec<Stmt>) {

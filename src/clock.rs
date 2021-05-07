@@ -4,6 +4,7 @@ use crate::interpreter::Interpreter;
 use crate::lox_callable::LoxCallable;
 use crate::value::Value;
 
+#[derive(Clone)]
 pub struct Clock {}
 
 impl Clock {
