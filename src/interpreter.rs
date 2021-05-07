@@ -95,7 +95,22 @@ impl Interpreter {
                 callee,
                 paren,
                 arguments,
-            } => Err(RuntimeError {}), // TODO implement
+            } => {
+                let callee = self.evaluate(&callee)?;
+
+                match callee {
+                    Value::Function(callable) => {
+                        let mut args = Vec::with_capacity(arguments.len());
+
+                        for argument in arguments {
+                            args.push(self.evaluate(argument)?);
+                        }
+
+                        Ok(callable.call(self, args))
+                    }
+                    _ => Err(RuntimeError {}),
+                }
+            }
             Expr::Grouping { expression: expr } => self.evaluate(&*expr),
             Expr::Literal(Literal::Bool(bool)) => Ok(Value::Bool(*bool)),
             Expr::Literal(Literal::Nil) => Ok(Value::Nil),
