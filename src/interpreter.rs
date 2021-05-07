@@ -96,7 +96,7 @@ impl Interpreter {
                 paren,
                 arguments,
             } => {
-                let callee = self.evaluate(&callee)?;
+                let callee = self.evaluate(callee)?;
 
                 match callee {
                     Value::Function(callable) => {
