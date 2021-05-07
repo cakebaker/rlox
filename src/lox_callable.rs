@@ -36,13 +36,13 @@ impl fmt::Debug for Box<dyn LoxCallable> {
 
 impl PartialEq for Box<dyn LoxCallable> {
     fn eq(&self, other: &Self) -> bool {
-        *self == *other
+        self == other
     }
 }
 
 // workaround for bug https://github.com/rust-lang/rust/issues/31740
 impl PartialEq<&Self> for Box<dyn LoxCallable> {
     fn eq(&self, other: &&Self) -> bool {
-        *self == *other
+        self == other
     }
 }
