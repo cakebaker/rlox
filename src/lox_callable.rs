@@ -23,7 +23,7 @@ where
 }
 
 impl Clone for Box<dyn LoxCallable> {
-    fn clone(&self) -> Box<dyn LoxCallable> {
+    fn clone(&self) -> Self {
         self.clone_box()
     }
 }
