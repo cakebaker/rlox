@@ -115,7 +115,7 @@ impl Scanner {
                     munched_chars = token.len();
                     tokens.push(token);
                 }
-                _ => reporter.report_error(format!("Unexpected character {} on line {}", c, line)),
+                _ => reporter.report_error(format!("Unexpected character '{}' on line {}", c, line)),
             }
             Self::scan_token(&source[munched_chars..], tokens, line, reporter)
         }
