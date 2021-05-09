@@ -115,7 +115,10 @@ impl Scanner {
                     munched_chars = token.len();
                     tokens.push(token);
                 }
-                _ => reporter.report_error(format!("Unexpected character '{}' on line {}", c, line)),
+                _ => {
+                    reporter.report_error(format!("Unexpected character '{}' on line {}", c, line));
+                    munched_chars = c.len_utf8();
+                }
             }
             Self::scan_token(&source[munched_chars..], tokens, line, reporter)
         }
@@ -358,9 +361,13 @@ mod tests {
 
     #[test]
     fn scan_invalid_character() {
-        let mut reporter = Reporter::new();
-        assert_eq!(reporter.has_errors(), false);
-        Scanner::scan_tokens("@", &mut reporter);
-        assert!(reporter.has_errors());
+        let invalid_chars = vec!["@", "ä"];
+
+        for invalid_char in invalid_chars {
+            let mut reporter = Reporter::new();
+            assert_eq!(reporter.has_errors(), false);
+            Scanner::scan_tokens(invalid_char, &mut reporter);
+            assert!(reporter.has_errors());
+        }
     }
 }
