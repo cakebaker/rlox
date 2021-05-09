@@ -11,6 +11,10 @@ impl Reporter {
         &self.errors
     }
 
+    pub fn has_errors(&self) -> bool {
+        !self.errors.is_empty()
+    }
+
     pub fn report_error(&mut self, error: String) {
         self.errors.push(error);
     }

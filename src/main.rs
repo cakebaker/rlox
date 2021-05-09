@@ -56,15 +56,18 @@ fn run_file(path: &str) {
 fn run(source: &str) {
     let mut reporter = Reporter::new();
     let tokens = Scanner::scan_tokens(source, &mut reporter);
-    let errors = reporter.get_errors();
+
+    if reporter.has_errors() {
+        for error in reporter.get_errors() {
+            eprintln!("{}", error);
+        }
+        // code 65: incorrect input data
+        std::process::exit(65);
+    }
 
     let mut parser = Parser::new(tokens.clone());
     let statements = parser.parse();
     Interpreter::new().interpret(statements.clone());
-
-    for error in errors {
-        eprintln!("{}", error);
-    }
 
     for token in tokens {
         println!("{:?}", token);
