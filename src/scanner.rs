@@ -285,9 +285,9 @@ mod tests {
     #[test]
     fn scan_unterminated_string() {
         let mut reporter = Reporter::new();
-        assert_eq!(reporter.get_errors().len(), 0);
+        assert_eq!(reporter.has_errors(), false);
         Scanner::scan_tokens("\"A string", &mut reporter);
-        assert_eq!(reporter.get_errors().len(), 1);
+        assert!(reporter.has_errors());
     }
 
     #[test]
@@ -359,8 +359,8 @@ mod tests {
     #[test]
     fn scan_invalid_character() {
         let mut reporter = Reporter::new();
-        assert_eq!(reporter.get_errors().len(), 0);
+        assert_eq!(reporter.has_errors(), false);
         Scanner::scan_tokens("@", &mut reporter);
-        assert_eq!(reporter.get_errors().len(), 1);
+        assert!(reporter.has_errors());
     }
 }
