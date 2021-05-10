@@ -73,11 +73,11 @@ impl Parser {
             }
         }
 
-        self.consume(TokenType::RightParen, "Expect ')' after parameters.");
+        self.consume(TokenType::RightParen, "Expect ')' after parameters.")?;
         self.consume(
             TokenType::LeftBrace,
             format!("Expect '{{' before {} body.", kind).as_str(),
-        );
+        )?;
 
         if let Stmt::Block(body) = self.block_statement()? {
             Ok(Stmt::Function(name, parameters, body))
@@ -99,7 +99,7 @@ impl Parser {
         self.consume(
             TokenType::Semicolon,
             "Expect ';' after variable declaration.",
-        );
+        )?;
         Ok(Stmt::Var(name, initializer))
     }
 
@@ -120,7 +120,7 @@ impl Parser {
     }
 
     fn for_statement(&mut self) -> Result<Stmt, ParseError> {
-        self.consume(TokenType::LeftParen, "Expect '(' after 'for'.");
+        self.consume(TokenType::LeftParen, "Expect '(' after 'for'.")?;
 
         let initializer = if self.do_match(vec![TokenType::Semicolon]) {
             None
@@ -135,14 +135,14 @@ impl Parser {
         } else {
             Some(self.expression()?)
         };
-        self.consume(TokenType::Semicolon, "Expect ';' after loop condition.");
+        self.consume(TokenType::Semicolon, "Expect ';' after loop condition.")?;
 
         let increment = if self.check(&TokenType::RightParen) {
             None
         } else {
             Some(self.expression()?)
         };
-        self.consume(TokenType::RightParen, "Expect ')' after for clauses.");
+        self.consume(TokenType::RightParen, "Expect ')' after for clauses.")?;
 
         let mut body = self.statement()?;
 
@@ -163,9 +163,9 @@ impl Parser {
     }
 
     fn while_statement(&mut self) -> Result<Stmt, ParseError> {
-        self.consume(TokenType::LeftParen, "Expect '(' after 'while'.");
+        self.consume(TokenType::LeftParen, "Expect '(' after 'while'.")?;
         let condition = self.expression()?;
-        self.consume(TokenType::RightParen, "Expect ')' after condition.");
+        self.consume(TokenType::RightParen, "Expect ')' after condition.")?;
 
         let body = Box::new(self.statement()?);
 
@@ -173,9 +173,9 @@ impl Parser {
     }
 
     fn if_statement(&mut self) -> Result<Stmt, ParseError> {
-        self.consume(TokenType::LeftParen, "Expect '(' after 'if'.");
+        self.consume(TokenType::LeftParen, "Expect '(' after 'if'.")?;
         let condition = self.expression()?;
-        self.consume(TokenType::RightParen, "Expect ')' after if condition.");
+        self.consume(TokenType::RightParen, "Expect ')' after if condition.")?;
 
         let then_branch = Box::new(self.statement()?);
 
@@ -190,7 +190,7 @@ impl Parser {
 
     fn print_statement(&mut self) -> Result<Stmt, ParseError> {
         let expr = self.expression()?;
-        self.consume(TokenType::Semicolon, "Expect ';' after value.");
+        self.consume(TokenType::Semicolon, "Expect ';' after value.")?;
         Ok(Stmt::Print(expr))
     }
 
@@ -201,14 +201,14 @@ impl Parser {
             statements.push(self.declaration()?);
         }
 
-        self.consume(TokenType::RightBrace, "Expect '}' after block");
+        self.consume(TokenType::RightBrace, "Expect '}' after block")?;
 
         Ok(Stmt::Block(statements))
     }
 
     fn expression_statement(&mut self) -> Result<Stmt, ParseError> {
         let expr = self.expression()?;
-        self.consume(TokenType::Semicolon, "Expect ';' after value.");
+        self.consume(TokenType::Semicolon, "Expect ';' after value.")?;
         Ok(Stmt::Expr(expr))
     }
 
@@ -399,7 +399,7 @@ impl Parser {
             TokenType::Identifier => Ok(Expr::Variable(self.previous())),
             TokenType::LeftParen => {
                 let expr = self.expression()?;
-                self.consume(TokenType::RightParen, "Expect ')' after expression.");
+                self.consume(TokenType::RightParen, "Expect ')' after expression.")?;
                 Ok(Expr::Grouping {
                     expression: Box::new(expr),
                 })
