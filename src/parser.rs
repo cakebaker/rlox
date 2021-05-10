@@ -63,7 +63,7 @@ impl Parser {
         )?;
         let mut parameters = Vec::new();
 
-        if !self.check(TokenType::RightParen) {
+        if !self.check(&TokenType::RightParen) {
             loop {
                 parameters.push(self.consume(TokenType::Identifier, "Expect parameter name.")?);
 
@@ -130,14 +130,14 @@ impl Parser {
             Some(self.expression_statement()?)
         };
 
-        let mut condition = if self.check(TokenType::Semicolon) {
+        let mut condition = if self.check(&TokenType::Semicolon) {
             None
         } else {
             Some(self.expression()?)
         };
         self.consume(TokenType::Semicolon, "Expect ';' after loop condition.");
 
-        let increment = if self.check(TokenType::RightParen) {
+        let increment = if self.check(&TokenType::RightParen) {
             None
         } else {
             Some(self.expression()?)
@@ -197,7 +197,7 @@ impl Parser {
     fn block_statement(&mut self) -> Result<Stmt, ParseError> {
         let mut statements = Vec::new();
 
-        while !self.check(TokenType::RightBrace) && !self.is_at_end() {
+        while !self.check(&TokenType::RightBrace) && !self.is_at_end() {
             statements.push(self.declaration()?);
         }
 
@@ -368,7 +368,7 @@ impl Parser {
     fn finish_call(&mut self, callee: Expr) -> Result<Expr, ParseError> {
         let mut arguments = Vec::new();
 
-        if !self.check(TokenType::RightParen) {
+        if !self.check(&TokenType::RightParen) {
             loop {
                 arguments.push(self.expression()?);
 
@@ -410,7 +410,7 @@ impl Parser {
 
     fn do_match(&mut self, token_types: Vec<TokenType>) -> bool {
         for token_type in token_types {
-            if self.check(token_type) {
+            if self.check(&token_type) {
                 self.advance();
                 return true;
             }
@@ -420,19 +420,19 @@ impl Parser {
     }
 
     fn consume(&mut self, token_type: TokenType, message: &str) -> Result<Token, ParseError> {
-        if self.check(token_type.clone()) {
+        if self.check(&token_type) {
             Ok(self.advance())
         } else {
             Err(ParseError::new(token_type, message))
         }
     }
 
-    fn check(&self, token_type: TokenType) -> bool {
+    fn check(&self, token_type: &TokenType) -> bool {
         if self.is_at_end() {
             return false;
         }
 
-        self.peek().token_type == token_type
+        self.peek().token_type == *token_type
     }
 
     fn advance(&mut self) -> Token {
