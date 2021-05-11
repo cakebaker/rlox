@@ -33,9 +33,10 @@ impl Parser {
         let mut statements = Vec::new();
 
         while !self.is_at_end() {
-            if let Ok(statement) = self.declaration() {
-                statements.push(statement);
-            } // TODO error handling
+            match self.declaration() {
+                Ok(statement) => statements.push(statement),
+                Err(e) => println!("{:?}: {}", e.token_type, e.message), // TODO use reporter
+            }
         }
 
         statements
