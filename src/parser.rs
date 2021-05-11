@@ -68,9 +68,11 @@ impl Parser {
             loop {
                 parameters.push(self.consume(TokenType::Identifier, "Expect parameter name.")?);
 
-                if self.do_match(vec![TokenType::Comma]) {
+                if self.check(&TokenType::RightParen) {
                     break;
                 }
+
+                self.do_match(vec![TokenType::Comma]);
             }
         }
 
