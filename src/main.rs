@@ -6,6 +6,7 @@ mod expr;
 mod interpreter;
 mod literal;
 mod lox_callable;
+mod lox_function;
 mod parser;
 mod reporter;
 mod scanner;

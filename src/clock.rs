@@ -19,7 +19,7 @@ impl LoxCallable for Clock {
     }
 
     // Returns the seconds since 1970-01-01
-    fn call(&self, _: &Interpreter, _: Vec<Value>) -> Value {
+    fn call(&self, _: &mut Interpreter, _: Vec<Value>) -> Value {
         let since_epoch = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .expect("Time went backwards");

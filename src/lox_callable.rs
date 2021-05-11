@@ -5,7 +5,7 @@ use crate::value::Value;
 
 pub trait LoxCallable: CallableClone {
     fn arity(&self) -> usize;
-    fn call(&self, interpreter: &Interpreter, arguments: Vec<Value>) -> Value;
+    fn call(&self, interpreter: &mut Interpreter, arguments: Vec<Value>) -> Value;
 }
 
 // workaround based on https://stackoverflow.com/questions/30353462/how-to-clone-a-struct-storing-a-boxed-trait-object/30353928

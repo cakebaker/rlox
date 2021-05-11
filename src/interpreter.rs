@@ -2,6 +2,7 @@ use crate::clock::Clock;
 use crate::environment::Environment;
 use crate::expr::Expr;
 use crate::literal::Literal;
+use crate::lox_function::LoxFunction;
 use crate::stmt::Stmt;
 use crate::token::Token;
 use crate::token_type::TokenType;
@@ -11,7 +12,7 @@ use crate::value::Value;
 pub struct RuntimeError {}
 
 pub struct Interpreter {
-    environment: Environment,
+    pub environment: Environment,
 }
 
 impl Interpreter {
@@ -31,15 +32,7 @@ impl Interpreter {
     fn execute(&mut self, statement: &Stmt) {
         match statement {
             Stmt::Block(statements) => {
-                self.environment = Environment::new_with_parent(self.environment.clone());
-
-                for statement in statements {
-                    self.execute(statement);
-                }
-
-                if let Some(parent) = self.environment.take_parent() {
-                    self.environment = parent;
-                }
+                self.execute_block(statements, &self.environment.clone());
             }
             Stmt::Expr(expr) => {
                 self.evaluate(&*expr);
@@ -53,7 +46,10 @@ impl Interpreter {
                     }
                 }
             }
-            Stmt::Function(name, params, body) => {} // TODO implement
+            Stmt::Function(name, params, body) => {
+                let f = LoxFunction::new(name, params, body);
+                self.environment.define(name.lexeme.clone(), Value::Function(Box::new(f)));
+            }
             Stmt::Print(expr) => {
                 if let Ok(result) = self.evaluate(&*expr) {
                     println!("{}", result);
@@ -68,6 +64,18 @@ impl Interpreter {
             Stmt::While(condition, body) => {
                 self.execute_while(condition, body);
             }
+        }
+    }
+
+    pub fn execute_block(&mut self, statements: &[Stmt], env: &Environment) {
+        self.environment = Environment::new_with_parent(env.clone());
+
+        for statement in statements {
+            self.execute(statement);
+        }
+
+        if let Some(parent) = self.environment.take_parent() {
+            self.environment = parent;
         }
     }
 
