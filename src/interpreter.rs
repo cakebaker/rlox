@@ -55,6 +55,7 @@ impl Interpreter {
                     println!("{}", result);
                 }
             }
+            Stmt::Return(keyword, value) => {}, // TODO implement
             Stmt::Var(name, None) => self.environment.define(name.lexeme.clone(), Value::Nil),
             Stmt::Var(name, Some(initializer)) => {
                 if let Ok(value) = self.evaluate(&*initializer) {

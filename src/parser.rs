@@ -113,6 +113,8 @@ impl Parser {
             self.if_statement()
         } else if self.do_match(vec![TokenType::Print]) {
             self.print_statement()
+        } else if self.do_match(vec![TokenType::Return]) {
+            self.return_statement()
         } else if self.do_match(vec![TokenType::While]) {
             self.while_statement()
         } else if self.do_match(vec![TokenType::LeftBrace]) {
@@ -120,6 +122,20 @@ impl Parser {
         } else {
             self.expression_statement()
         }
+    }
+
+    fn return_statement(&mut self) -> Result<Stmt, ParseError> {
+        let keyword = self.previous();
+
+        let value = if self.check(&TokenType::Semicolon) {
+            None
+        } else {
+            Some(self.expression()?)
+        };
+
+        self.consume(TokenType::Semicolon, "Expect ';' after return value.")?;
+
+        Ok(Stmt::Return(keyword, value))
     }
 
     fn for_statement(&mut self) -> Result<Stmt, ParseError> {
