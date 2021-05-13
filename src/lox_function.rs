@@ -1,5 +1,6 @@
 use crate::environment::Environment;
 use crate::interpreter::Interpreter;
+use crate::interpreter::RuntimeError;
 use crate::lox_callable::LoxCallable;
 use crate::stmt::Stmt;
 use crate::token::Token;
@@ -14,7 +15,11 @@ pub struct LoxFunction {
 
 impl LoxFunction {
     pub fn new(name: &Token, params: &[Token], body: &[Stmt]) -> Self {
-        Self { name: name.clone(), params: params.to_owned(), body: body.to_owned() }
+        Self {
+            name: name.clone(),
+            params: params.to_owned(),
+            body: body.to_owned(),
+        }
     }
 }
 
@@ -30,9 +35,11 @@ impl LoxCallable for LoxFunction {
             env.define(param.lexeme.clone(), arguments[i].clone());
         }
 
-        interpreter.execute_block(&self.body, &env);
+        let result = interpreter.execute_block(&self.body, &env);
 
-        // just return something to satisfy the function signature
-        Value::Bool(true)
+        match result {
+            Err(RuntimeError::Return(value)) => value,
+            _ => Value::Nil,
+        }
     }
 }

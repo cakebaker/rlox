@@ -54,14 +54,22 @@ impl Interpreter {
             }
             Stmt::Function(name, params, body) => {
                 let f = LoxFunction::new(name, params, body);
-                self.environment.define(name.lexeme.clone(), Value::Function(Box::new(f)));
+                self.environment
+                    .define(name.lexeme.clone(), Value::Function(Box::new(f)));
             }
             Stmt::Print(expr) => {
                 if let Ok(result) = self.evaluate(&*expr) {
                     println!("{}", result);
                 }
             }
-            Stmt::Return(keyword, value) => {}, // TODO implement
+            Stmt::Return(_, value) => {
+                let return_value = match value {
+                    Some(v) => self.evaluate(v)?,
+                    None => Value::Nil,
+                };
+
+                return Err(RuntimeError::Return(return_value));
+            }
             Stmt::Var(name, None) => self.environment.define(name.lexeme.clone(), Value::Nil),
             Stmt::Var(name, Some(initializer)) => {
                 if let Ok(value) = self.evaluate(&*initializer) {
@@ -76,7 +84,11 @@ impl Interpreter {
         Ok(())
     }
 
-    pub fn execute_block(&mut self, statements: &[Stmt], env: &Environment) -> Result<(), RuntimeError> {
+    pub fn execute_block(
+        &mut self,
+        statements: &[Stmt],
+        env: &Environment,
+    ) -> Result<(), RuntimeError> {
         self.environment = Environment::new_with_parent(env.clone());
 
         for statement in statements {
