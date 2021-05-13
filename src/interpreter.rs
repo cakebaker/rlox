@@ -38,17 +38,17 @@ impl Interpreter {
     fn execute(&mut self, statement: &Stmt) -> Result<(), RuntimeError> {
         match statement {
             Stmt::Block(statements) => {
-                self.execute_block(statements, &self.environment.clone());
+                self.execute_block(statements, &self.environment.clone())?;
             }
             Stmt::Expr(expr) => {
-                self.evaluate(&*expr);
+                self.evaluate(&*expr)?;
             }
             Stmt::If(condition, then_branch, else_branch) => {
                 if let Ok(literal) = self.evaluate(&*condition) {
                     if literal.is_truthy() {
-                        self.execute(&*then_branch);
+                        self.execute(&*then_branch)?;
                     } else if *else_branch != None {
-                        self.execute(&*else_branch.as_ref().unwrap());
+                        self.execute(&*else_branch.as_ref().unwrap())?;
                     }
                 }
             }
@@ -69,7 +69,7 @@ impl Interpreter {
                 }
             }
             Stmt::While(condition, body) => {
-                self.execute_while(condition, body);
+                self.execute_while(condition, body)?;
             }
         }
 
@@ -80,7 +80,7 @@ impl Interpreter {
         self.environment = Environment::new_with_parent(env.clone());
 
         for statement in statements {
-            self.execute(statement);
+            self.execute(statement)?;
         }
 
         if let Some(parent) = self.environment.take_parent() {
@@ -92,7 +92,7 @@ impl Interpreter {
 
     fn execute_while(&mut self, condition: &Expr, body: &Stmt) -> Result<(), RuntimeError> {
         while self.evaluate(condition)?.is_truthy() {
-            self.execute(body);
+            self.execute(body)?;
         }
 
         Ok(())
