@@ -9,7 +9,13 @@ use crate::token_type::TokenType;
 use crate::value::Value;
 
 #[derive(Debug)]
-pub struct RuntimeError {}
+pub enum RuntimeError {
+    InvalidOperator,
+    InvalidType,
+    Return(Value),
+    UndefinedVariable(String),
+    ValueNotCallable(Value),
+}
 
 pub struct Interpreter {
     pub environment: Environment,
@@ -29,7 +35,7 @@ impl Interpreter {
         }
     }
 
-    fn execute(&mut self, statement: &Stmt) {
+    fn execute(&mut self, statement: &Stmt) -> Result<(), RuntimeError> {
         match statement {
             Stmt::Block(statements) => {
                 self.execute_block(statements, &self.environment.clone());
@@ -66,9 +72,11 @@ impl Interpreter {
                 self.execute_while(condition, body);
             }
         }
+
+        Ok(())
     }
 
-    pub fn execute_block(&mut self, statements: &[Stmt], env: &Environment) {
+    pub fn execute_block(&mut self, statements: &[Stmt], env: &Environment) -> Result<(), RuntimeError> {
         self.environment = Environment::new_with_parent(env.clone());
 
         for statement in statements {
@@ -78,6 +86,8 @@ impl Interpreter {
         if let Some(parent) = self.environment.take_parent() {
             self.environment = parent;
         }
+
+        Ok(())
     }
 
     fn execute_while(&mut self, condition: &Expr, body: &Stmt) -> Result<(), RuntimeError> {
@@ -117,7 +127,7 @@ impl Interpreter {
 
                         Ok(callable.call(self, args))
                     }
-                    _ => Err(RuntimeError {}),
+                    _ => Err(RuntimeError::ValueNotCallable(callee)),
                 }
             }
             Expr::Grouping { expression: expr } => self.evaluate(&*expr),
@@ -154,10 +164,10 @@ impl Interpreter {
         match operator.token_type {
             TokenType::Minus => match result {
                 Value::Number(number) => Ok(Value::Number(-number)),
-                _ => Err(RuntimeError {}),
+                _ => Err(RuntimeError::InvalidType),
             },
             TokenType::Bang => Ok(Value::Bool(!&result.is_truthy())),
-            _ => Err(RuntimeError {}),
+            _ => Err(RuntimeError::InvalidOperator),
         }
     }
 
@@ -180,28 +190,28 @@ impl Interpreter {
                 TokenType::LessEqual => Ok(Value::Bool(l <= r)),
                 TokenType::EqualEqual => Ok(Value::Bool(l == r)),
                 TokenType::BangEqual => Ok(Value::Bool(l != r)),
-                _ => Err(RuntimeError {}),
+                _ => Err(RuntimeError::InvalidOperator),
             },
             (Value::String(l), Value::String(r)) => match operator.token_type {
                 TokenType::Plus => Ok(Value::String(format!("{}{}", l, r))),
                 TokenType::EqualEqual => Ok(Value::Bool(l == r)),
                 TokenType::BangEqual => Ok(Value::Bool(l != r)),
-                _ => Err(RuntimeError {}),
+                _ => Err(RuntimeError::InvalidOperator),
             },
             (Value::Bool(l), Value::Bool(r)) => match operator.token_type {
                 TokenType::EqualEqual => Ok(Value::Bool(l == r)),
                 TokenType::BangEqual => Ok(Value::Bool(l != r)),
-                _ => Err(RuntimeError {}),
+                _ => Err(RuntimeError::InvalidOperator),
             },
             (Value::Nil, Value::Nil) => match operator.token_type {
                 TokenType::EqualEqual => Ok(Value::Bool(true)),
                 TokenType::BangEqual => Ok(Value::Bool(false)),
-                _ => Err(RuntimeError {}),
+                _ => Err(RuntimeError::InvalidOperator),
             },
             _ => match operator.token_type {
                 TokenType::EqualEqual => Ok(Value::Bool(false)),
                 TokenType::BangEqual => Ok(Value::Bool(true)),
-                _ => Err(RuntimeError {}),
+                _ => Err(RuntimeError::InvalidOperator),
             },
         }
     }

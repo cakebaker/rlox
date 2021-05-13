@@ -57,7 +57,7 @@ impl Environment {
                     let env = c.borrow();
                     env.get(name)
                 }
-                None => Err(RuntimeError {}),
+                None => Err(RuntimeError::UndefinedVariable(name)),
             },
         }
     }
