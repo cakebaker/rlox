@@ -1,25 +1,24 @@
-use crate::reporter::Reporter;
+use crate::scan_error::ScanError;
 use crate::token::Token;
 use crate::token_type::TokenType;
 
 pub struct Scanner {}
 
 impl Scanner {
-    pub fn scan_tokens(source: &str, reporter: &mut Reporter) -> Vec<Token> {
+    pub fn scan_tokens(source: &str) -> Result<Vec<Token>, ScanError> {
         let tokens = vec![];
         let initial_line = 1;
-        Self::scan_token(source, tokens, initial_line, reporter)
+        Self::scan_token(source, tokens, initial_line)
     }
 
     fn scan_token(
         source: &str,
         mut tokens: Vec<Token>,
         mut line: usize,
-        reporter: &mut Reporter,
-    ) -> Vec<Token> {
+    ) -> Result<Vec<Token>, ScanError> {
         if source.is_empty() {
             tokens.push(Token::new(TokenType::Eof, "".to_string(), line));
-            tokens
+            Ok(tokens)
         } else {
             let mut munched_chars = 1;
             let c = source.chars().next().unwrap();
@@ -98,9 +97,7 @@ impl Scanner {
                         munched_chars = close_position + 1;
                         line += source[..close_position].matches('\n').count();
                     } else {
-                        reporter
-                            .report_error(format!("Unterminated string starting on line {}", line));
-                        munched_chars = source.len();
+                        return Err(ScanError::UnterminatedString(line));
                     }
                 }
                 '0'..='9' => {
@@ -115,12 +112,9 @@ impl Scanner {
                     munched_chars = token.len();
                     tokens.push(token);
                 }
-                _ => {
-                    reporter.report_error(format!("Unexpected character '{}' on line {}", c, line));
-                    munched_chars = c.len_utf8();
-                }
+                _ => return Err(ScanError::UnexpectedChar(c, line)),
             }
-            Self::scan_token(&source[munched_chars..], tokens, line, reporter)
+            Self::scan_token(&source[munched_chars..], tokens, line)
         }
     }
 
@@ -186,12 +180,12 @@ impl Scanner {
 #[cfg(test)]
 mod tests {
     use super::Scanner;
-    use crate::reporter::Reporter;
+    use crate::scan_error::ScanError;
     use crate::token_type::TokenType;
 
     #[test]
     fn scan_empty_string() {
-        let result = Scanner::scan_tokens("", &mut Reporter::new());
+        let result = Scanner::scan_tokens("").unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].token_type, TokenType::Eof);
         assert_eq!(result[0].line, 1);
@@ -214,7 +208,7 @@ mod tests {
         ];
 
         for (string, expected_token_type) in strings_and_token_types {
-            let result = Scanner::scan_tokens(string, &mut Reporter::new());
+            let result = Scanner::scan_tokens(string).unwrap();
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, expected_token_type);
             assert_eq!(result[1].token_type, TokenType::Eof);
@@ -235,7 +229,7 @@ mod tests {
         ];
 
         for (string, expected_token_type) in strings_and_token_types {
-            let result = Scanner::scan_tokens(string, &mut Reporter::new());
+            let result = Scanner::scan_tokens(string).unwrap();
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, expected_token_type);
             assert_eq!(result[1].token_type, TokenType::Eof);
@@ -244,11 +238,11 @@ mod tests {
 
     #[test]
     fn ignore_comments() {
-        let mut result = Scanner::scan_tokens("// a comment", &mut Reporter::new());
+        let mut result = Scanner::scan_tokens("// a comment").unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].token_type, TokenType::Eof);
 
-        result = Scanner::scan_tokens("// a comment\n;", &mut Reporter::new());
+        result = Scanner::scan_tokens("// a comment\n;").unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].token_type, TokenType::Semicolon);
         assert_eq!(result[1].token_type, TokenType::Eof);
@@ -259,7 +253,7 @@ mod tests {
         let strings = vec![" ", "\r", "\t"];
 
         for string in strings {
-            let result = Scanner::scan_tokens(string, &mut Reporter::new());
+            let result = Scanner::scan_tokens(string).unwrap();
             assert_eq!(result.len(), 1);
             assert_eq!(result[0].token_type, TokenType::Eof);
         }
@@ -267,7 +261,7 @@ mod tests {
 
     #[test]
     fn increase_line_counter_after_linebreak() {
-        let result = Scanner::scan_tokens("\n", &mut Reporter::new());
+        let result = Scanner::scan_tokens("\n").unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].token_type, TokenType::Eof);
         assert_eq!(result[0].line, 2);
@@ -275,7 +269,7 @@ mod tests {
 
     #[test]
     fn scan_string_literals() {
-        let result = Scanner::scan_tokens("\"A string\"", &mut Reporter::new());
+        let result = Scanner::scan_tokens("\"A string\"").unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(
             result[0].token_type,
@@ -287,15 +281,15 @@ mod tests {
 
     #[test]
     fn scan_unterminated_string() {
-        let mut reporter = Reporter::new();
-        assert_eq!(reporter.has_errors(), false);
-        Scanner::scan_tokens("\"A string", &mut reporter);
-        assert!(reporter.has_errors());
+        match Scanner::scan_tokens("\"A string") {
+            Err(ScanError::UnterminatedString(_)) => assert!(true),
+            _ => assert!(false),
+        }
     }
 
     #[test]
     fn scan_multiline_strings() {
-        let result = Scanner::scan_tokens("\"Line A\nLine B\"", &mut Reporter::new());
+        let result = Scanner::scan_tokens("\"Line A\nLine B\"").unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(
             result[0].token_type,
@@ -310,7 +304,7 @@ mod tests {
         let numbers_and_literals = vec![("123", 123 as f64), ("123.45", 123.45)];
 
         for (number, literal) in numbers_and_literals {
-            let result = Scanner::scan_tokens(number, &mut Reporter::new());
+            let result = Scanner::scan_tokens(number).unwrap();
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, TokenType::Number(literal));
             assert_eq!(result[0].lexeme, number);
@@ -323,7 +317,7 @@ mod tests {
         let identifiers = vec!["_id", "id", "ID", "i_d"];
 
         for identifier in identifiers {
-            let result = Scanner::scan_tokens(identifier, &mut Reporter::new());
+            let result = Scanner::scan_tokens(identifier).unwrap();
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, TokenType::Identifier);
             assert_eq!(result[1].token_type, TokenType::Eof);
@@ -352,7 +346,7 @@ mod tests {
         ];
 
         for (keyword, token_type) in keywords_and_token_types {
-            let result = Scanner::scan_tokens(keyword, &mut Reporter::new());
+            let result = Scanner::scan_tokens(keyword).unwrap();
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, token_type);
             assert_eq!(result[1].token_type, TokenType::Eof);
@@ -364,10 +358,10 @@ mod tests {
         let invalid_chars = vec!["@", "ä"];
 
         for invalid_char in invalid_chars {
-            let mut reporter = Reporter::new();
-            assert_eq!(reporter.has_errors(), false);
-            Scanner::scan_tokens(invalid_char, &mut reporter);
-            assert!(reporter.has_errors());
+            match Scanner::scan_tokens(invalid_char) {
+                Err(ScanError::UnexpectedChar(_, _)) => assert!(true),
+                _ => assert!(false),
+            }
         }
     }
 }

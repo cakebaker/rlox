@@ -8,7 +8,7 @@ mod literal;
 mod lox_callable;
 mod lox_function;
 mod parser;
-mod reporter;
+mod scan_error;
 mod scanner;
 mod stmt;
 mod token;
@@ -22,7 +22,6 @@ use std::io::BufRead;
 
 use crate::interpreter::Interpreter;
 use crate::parser::Parser;
-use crate::reporter::Reporter;
 use crate::scanner::Scanner;
 
 fn main() {
@@ -55,16 +54,15 @@ fn run_file(path: &str) {
 }
 
 fn run(source: &str) {
-    let mut reporter = Reporter::new();
-    let tokens = Scanner::scan_tokens(source, &mut reporter);
+    let scan_result = Scanner::scan_tokens(source);
 
-    if reporter.has_errors() {
-        for error in reporter.get_errors() {
-            eprintln!("{}", error);
-        }
+    if scan_result.is_err() {
+        eprintln!("{}", scan_result.unwrap_err());
         // code 65: incorrect input data
         std::process::exit(65);
     }
+
+    let tokens = scan_result.unwrap();
 
     let mut parser = Parser::new(tokens.clone());
     let statements = parser.parse();
