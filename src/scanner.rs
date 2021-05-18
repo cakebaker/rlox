@@ -34,55 +34,35 @@ impl Scanner {
                 '+' => tokens.push(Token::new(TokenType::Plus, c.to_string(), line)),
                 ';' => tokens.push(Token::new(TokenType::Semicolon, c.to_string(), line)),
                 '*' => tokens.push(Token::new(TokenType::Star, c.to_string(), line)),
-                '/' => {
-                    let look_ahead = source.chars().nth(1);
-                    if look_ahead == Some('/') {
-                        let linebreak_position = source.find('\n');
-                        if linebreak_position == None {
-                            munched_chars = source.len();
-                        } else {
-                            munched_chars = linebreak_position.unwrap();
-                        }
+                '/' if matches!(source.chars().nth(1), Some('/')) => {
+                    let linebreak_position = source.find('\n');
+                    if linebreak_position == None {
+                        munched_chars = source.len();
                     } else {
-                        tokens.push(Token::new(TokenType::Slash, c.to_string(), line));
+                        munched_chars = linebreak_position.unwrap();
                     }
                 }
-                '!' => {
-                    let look_ahead = source.chars().nth(1);
-                    if look_ahead == Some('=') {
-                        tokens.push(Token::new(TokenType::BangEqual, "!=".to_string(), line));
-                        munched_chars = 2;
-                    } else {
-                        tokens.push(Token::new(TokenType::Bang, c.to_string(), line));
-                    }
+                '/' => tokens.push(Token::new(TokenType::Slash, c.to_string(), line)),
+                '!' if matches!(source.chars().nth(1), Some('=')) => {
+                    tokens.push(Token::new(TokenType::BangEqual, "!=".to_string(), line));
+                    munched_chars = 2;
                 }
-                '=' => {
-                    let look_ahead = source.chars().nth(1);
-                    if look_ahead == Some('=') {
-                        tokens.push(Token::new(TokenType::EqualEqual, "==".to_string(), line));
-                        munched_chars = 2;
-                    } else {
-                        tokens.push(Token::new(TokenType::Equal, c.to_string(), line));
-                    }
+                '!' => tokens.push(Token::new(TokenType::Bang, c.to_string(), line)),
+                '=' if matches!(source.chars().nth(1), Some('=')) => {
+                    tokens.push(Token::new(TokenType::EqualEqual, "==".to_string(), line));
+                    munched_chars = 2;
                 }
-                '<' => {
-                    let look_ahead = source.chars().nth(1);
-                    if look_ahead == Some('=') {
-                        tokens.push(Token::new(TokenType::LessEqual, "<=".to_string(), line));
-                        munched_chars = 2;
-                    } else {
-                        tokens.push(Token::new(TokenType::Less, c.to_string(), line));
-                    }
+                '=' => tokens.push(Token::new(TokenType::Equal, c.to_string(), line)),
+                '<' if matches!(source.chars().nth(1), Some('=')) => {
+                    tokens.push(Token::new(TokenType::LessEqual, "<=".to_string(), line));
+                    munched_chars = 2;
                 }
-                '>' => {
-                    let look_ahead = source.chars().nth(1);
-                    if look_ahead == Some('=') {
-                        tokens.push(Token::new(TokenType::GreaterEqual, ">=".to_string(), line));
-                        munched_chars = 2;
-                    } else {
-                        tokens.push(Token::new(TokenType::Greater, c.to_string(), line));
-                    }
+                '<' => tokens.push(Token::new(TokenType::Less, c.to_string(), line)),
+                '>' if matches!(source.chars().nth(1), Some('=')) => {
+                    tokens.push(Token::new(TokenType::GreaterEqual, ">=".to_string(), line));
+                    munched_chars = 2;
                 }
+                '>' => tokens.push(Token::new(TokenType::Greater, c.to_string(), line)),
                 ' ' | '\r' | '\t' => {} // ignore whitespace
                 '\n' => line += 1,
                 '"' => {
