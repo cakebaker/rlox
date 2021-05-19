@@ -534,9 +534,6 @@ mod tests {
     }
 
     fn token(token_type: TokenType) -> Token {
-        match token_type {
-            TokenType::String(ref s) => Token::new(token_type.clone(), s.to_string(), 1),
-            _ => Token::new(token_type, "".to_string(), 1),
-        }
+        Token::new(token_type, 1)
     }
 }

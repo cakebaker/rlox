@@ -524,6 +524,6 @@ mod tests {
     }
 
     fn token(token_type: TokenType) -> Token {
-        Token::new(token_type, "".to_string(), 1)
+        Token::new(token_type, 1)
     }
 }
