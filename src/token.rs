@@ -26,10 +26,6 @@ impl Token {
             line,
         }
     }
-
-    pub fn len(&self) -> usize {
-        self.lexeme.len()
-    }
 }
 
 #[cfg(test)]

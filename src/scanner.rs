@@ -82,13 +82,13 @@ impl Scanner {
                 '0'..='9' => {
                     let token = Self::scan_number(source, line);
 
-                    munched_chars = token.len();
+                    munched_chars = token.lexeme.len();
                     tokens.push(token);
                 }
                 '_' | 'a'..='z' | 'A'..='Z' => {
                     let token = Self::scan_identifier(source, line);
 
-                    munched_chars = token.len();
+                    munched_chars = token.lexeme.len();
                     tokens.push(token);
                 }
                 _ => return Err(ScanError::UnexpectedChar(c, line)),
