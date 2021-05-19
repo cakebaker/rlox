@@ -23,17 +23,17 @@ impl Scanner {
             let mut munched_chars = 1;
             let c = source.chars().next().unwrap();
 
-            match c {
-                '(' => tokens.push(Token::new(TokenType::LeftParen, line)),
-                ')' => tokens.push(Token::new(TokenType::RightParen, line)),
-                '{' => tokens.push(Token::new(TokenType::LeftBrace, line)),
-                '}' => tokens.push(Token::new(TokenType::RightBrace, line)),
-                ',' => tokens.push(Token::new(TokenType::Comma, line)),
-                '.' => tokens.push(Token::new(TokenType::Dot, line)),
-                '-' => tokens.push(Token::new(TokenType::Minus, line)),
-                '+' => tokens.push(Token::new(TokenType::Plus, line)),
-                ';' => tokens.push(Token::new(TokenType::Semicolon, line)),
-                '*' => tokens.push(Token::new(TokenType::Star, line)),
+            let maybe_token = match c {
+                '(' => Some(Token::new(TokenType::LeftParen, line)),
+                ')' => Some(Token::new(TokenType::RightParen, line)),
+                '{' => Some(Token::new(TokenType::LeftBrace, line)),
+                '}' => Some(Token::new(TokenType::RightBrace, line)),
+                ',' => Some(Token::new(TokenType::Comma, line)),
+                '.' => Some(Token::new(TokenType::Dot, line)),
+                '-' => Some(Token::new(TokenType::Minus, line)),
+                '+' => Some(Token::new(TokenType::Plus, line)),
+                ';' => Some(Token::new(TokenType::Semicolon, line)),
+                '*' => Some(Token::new(TokenType::Star, line)),
                 '/' if matches!(source.chars().nth(1), Some('/')) => {
                     let linebreak_position = source.find('\n');
                     if linebreak_position == None {
@@ -41,40 +41,45 @@ impl Scanner {
                     } else {
                         munched_chars = linebreak_position.unwrap();
                     }
+                    None
                 }
-                '/' => tokens.push(Token::new(TokenType::Slash, line)),
+                '/' => Some(Token::new(TokenType::Slash, line)),
                 '!' if matches!(source.chars().nth(1), Some('=')) => {
-                    tokens.push(Token::new(TokenType::BangEqual, line));
                     munched_chars = 2;
+                    Some(Token::new(TokenType::BangEqual, line))
                 }
-                '!' => tokens.push(Token::new(TokenType::Bang, line)),
+                '!' => Some(Token::new(TokenType::Bang, line)),
                 '=' if matches!(source.chars().nth(1), Some('=')) => {
-                    tokens.push(Token::new(TokenType::EqualEqual, line));
                     munched_chars = 2;
+                    Some(Token::new(TokenType::EqualEqual, line))
                 }
-                '=' => tokens.push(Token::new(TokenType::Equal, line)),
+                '=' => Some(Token::new(TokenType::Equal, line)),
                 '<' if matches!(source.chars().nth(1), Some('=')) => {
-                    tokens.push(Token::new(TokenType::LessEqual, line));
                     munched_chars = 2;
+                    Some(Token::new(TokenType::LessEqual, line))
                 }
-                '<' => tokens.push(Token::new(TokenType::Less, line)),
+                '<' => Some(Token::new(TokenType::Less, line)),
                 '>' if matches!(source.chars().nth(1), Some('=')) => {
-                    tokens.push(Token::new(TokenType::GreaterEqual, line));
                     munched_chars = 2;
+                    Some(Token::new(TokenType::GreaterEqual, line))
                 }
-                '>' => tokens.push(Token::new(TokenType::Greater, line)),
-                ' ' | '\r' | '\t' => {} // ignore whitespace
-                '\n' => line += 1,
+                '>' => Some(Token::new(TokenType::Greater, line)),
+                ' ' | '\r' | '\t' => None, // ignore whitespace
+                '\n' => {
+                    line += 1;
+                    None
+                }
                 '"' => {
                     if let Some(position) = source[1..].find('"') {
                         // correct position because the find() doesn't start from the beginning
                         let close_position = position + 1;
-                        tokens.push(Token::new(
-                            TokenType::String(source[1..close_position].to_string()),
-                            line,
-                        ));
                         munched_chars = close_position + 1;
                         line += source[..close_position].matches('\n').count();
+
+                        Some(Token::new(
+                            TokenType::String(source[1..close_position].to_string()),
+                            line,
+                        ))
                     } else {
                         return Err(ScanError::UnterminatedString(line));
                     }
@@ -83,16 +88,21 @@ impl Scanner {
                     let token = Self::scan_number(source, line);
 
                     munched_chars = token.lexeme.len();
-                    tokens.push(token);
+                    Some(token)
                 }
                 '_' | 'a'..='z' | 'A'..='Z' => {
                     let token = Self::scan_identifier(source, line);
 
                     munched_chars = token.lexeme.len();
-                    tokens.push(token);
+                    Some(token)
                 }
                 _ => return Err(ScanError::UnexpectedChar(c, line)),
+            };
+
+            if let Some(token) = maybe_token {
+                tokens.push(token);
             }
+
             Self::scan_token(&source[munched_chars..], tokens, line)
         }
     }
@@ -126,10 +136,7 @@ impl Scanner {
         }
 
         let number = &source[..munched_chars];
-        Token::new(
-            TokenType::Number(number.parse().unwrap()),
-            line,
-        )
+        Token::new(TokenType::Number(number.parse().unwrap()), line)
     }
 
     fn get_type_if_keyword(keyword: &str) -> Option<TokenType> {
