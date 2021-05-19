@@ -45,22 +45,18 @@ impl Scanner {
                 }
                 '/' => Some(Token::new(TokenType::Slash, line)),
                 '!' if matches!(source.chars().nth(1), Some('=')) => {
-                    munched_chars = 2;
                     Some(Token::new(TokenType::BangEqual, line))
                 }
                 '!' => Some(Token::new(TokenType::Bang, line)),
                 '=' if matches!(source.chars().nth(1), Some('=')) => {
-                    munched_chars = 2;
                     Some(Token::new(TokenType::EqualEqual, line))
                 }
                 '=' => Some(Token::new(TokenType::Equal, line)),
                 '<' if matches!(source.chars().nth(1), Some('=')) => {
-                    munched_chars = 2;
                     Some(Token::new(TokenType::LessEqual, line))
                 }
                 '<' => Some(Token::new(TokenType::Less, line)),
                 '>' if matches!(source.chars().nth(1), Some('=')) => {
-                    munched_chars = 2;
                     Some(Token::new(TokenType::GreaterEqual, line))
                 }
                 '>' => Some(Token::new(TokenType::Greater, line)),
@@ -84,22 +80,13 @@ impl Scanner {
                         return Err(ScanError::UnterminatedString(line));
                     }
                 }
-                '0'..='9' => {
-                    let token = Self::scan_number(source, line);
-
-                    munched_chars = token.lexeme.len();
-                    Some(token)
-                }
-                '_' | 'a'..='z' | 'A'..='Z' => {
-                    let token = Self::scan_identifier(source, line);
-
-                    munched_chars = token.lexeme.len();
-                    Some(token)
-                }
+                '0'..='9' => Some(Self::scan_number(source, line)),
+                '_' | 'a'..='z' | 'A'..='Z' => Some(Self::scan_identifier(source, line)),
                 _ => return Err(ScanError::UnexpectedChar(c, line)),
             };
 
             if let Some(token) = maybe_token {
+                munched_chars = token.lexeme.len();
                 tokens.push(token);
             }
 
