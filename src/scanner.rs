@@ -80,7 +80,7 @@ impl Scanner {
                         return Err(ScanError::UnterminatedString(line));
                     }
                 }
-                '0'..='9' => Some(Self::scan_number(source, line)),
+                '0'..='9' => Some(Self::scan_number(source, line)?),
                 '_' | 'a'..='z' | 'A'..='Z' => Some(Self::scan_identifier(source, line)),
                 _ => return Err(ScanError::UnexpectedChar(c, line)),
             };
@@ -108,7 +108,7 @@ impl Scanner {
         Token::new_with_lexeme(token_type, identifier, line)
     }
 
-    fn scan_number(source: &str, line: usize) -> Token {
+    fn scan_number(source: &str, line: usize) -> Result<Token, ScanError> {
         let mut munched_chars = source.chars().take_while(char::is_ascii_digit).count();
 
         if source[munched_chars..].chars().take(1).collect::<String>() == "." {
@@ -119,11 +119,13 @@ impl Scanner {
 
             if n > 0 {
                 munched_chars = munched_chars + 1 + n;
+            } else {
+                return Err(ScanError::NumberEndsWithDot(line));
             }
         }
 
         let number = &source[..munched_chars];
-        Token::new(TokenType::Number(number.parse().unwrap()), line)
+        Ok(Token::new(TokenType::Number(number.parse().unwrap()), line))
     }
 
     fn get_type_if_keyword(keyword: &str) -> Option<TokenType> {
@@ -281,6 +283,14 @@ mod tests {
             assert_eq!(result[0].token_type, TokenType::Number(literal));
             assert_eq!(result[0].lexeme, number);
             assert_eq!(result[1].token_type, TokenType::Eof);
+        }
+    }
+
+    #[test]
+    fn scan_invalid_number() {
+        match Scanner::scan_tokens("123.") {
+            Err(ScanError::NumberEndsWithDot(_)) => assert!(true),
+            _ => assert!(false),
         }
     }
 
