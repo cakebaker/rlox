@@ -66,19 +66,9 @@ impl Scanner {
                     None
                 }
                 '"' => {
-                    if let Some(position) = source[1..].find('"') {
-                        // correct position because the find() doesn't start from the beginning
-                        let close_position = position + 1;
-                        munched_chars = close_position + 1;
-                        line += source[..close_position].matches('\n').count();
-
-                        Some(Token::new(
-                            TokenType::String(source[1..close_position].to_string()),
-                            line,
-                        ))
-                    } else {
-                        return Err(ScanError::UnterminatedString(line));
-                    }
+                    let token = Self::scan_string(source, line)?;
+                    line += token.lexeme.matches('\n').count();
+                    Some(token)
                 }
                 '0'..='9' => Some(Self::scan_number(source, line)?),
                 '_' | 'a'..='z' | 'A'..='Z' => Some(Self::scan_identifier(source, line)),
@@ -126,6 +116,21 @@ impl Scanner {
 
         let number = &source[..munched_chars];
         Ok(Token::new(TokenType::Number(number.parse().unwrap()), line))
+    }
+
+    fn scan_string(source: &str, line: usize) -> Result<Token, ScanError> {
+        // skip first char because it is always a '"'
+        source[1..]
+            .find('"')
+            .map_or(Err(ScanError::UnterminatedString(line)), |position| {
+                // fix position because find() started on position 1 (and not 0)
+                let close_position = position + 1;
+
+                Ok(Token::new(
+                    TokenType::String(source[1..close_position].to_string()),
+                    line,
+                ))
+            })
     }
 
     fn get_type_if_keyword(keyword: &str) -> Option<TokenType> {
