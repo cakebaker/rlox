@@ -2,20 +2,18 @@ use crate::scan_error::ScanError;
 use crate::token::Token;
 use crate::token_type::TokenType;
 
+type ScanResult<T> = Result<T, ScanError>;
+
 pub struct Scanner {}
 
 impl Scanner {
-    pub fn scan_tokens(source: &str) -> Result<Vec<Token>, ScanError> {
+    pub fn scan_tokens(source: &str) -> ScanResult<Vec<Token>> {
         let tokens = vec![];
         let initial_line = 1;
         Self::scan_token(source, tokens, initial_line)
     }
 
-    fn scan_token(
-        source: &str,
-        mut tokens: Vec<Token>,
-        mut line: usize,
-    ) -> Result<Vec<Token>, ScanError> {
+    fn scan_token(source: &str, mut tokens: Vec<Token>, mut line: usize) -> ScanResult<Vec<Token>> {
         if source.is_empty() {
             tokens.push(Token::new(TokenType::Eof, line));
             Ok(tokens)
@@ -98,7 +96,7 @@ impl Scanner {
         Token::new_with_lexeme(token_type, identifier, line)
     }
 
-    fn scan_number(source: &str, line: usize) -> Result<Token, ScanError> {
+    fn scan_number(source: &str, line: usize) -> ScanResult<Token> {
         let mut munched_chars = source.chars().take_while(char::is_ascii_digit).count();
 
         if source[munched_chars..].chars().take(1).collect::<String>() == "." {
@@ -118,7 +116,7 @@ impl Scanner {
         Ok(Token::new(TokenType::Number(number.parse().unwrap()), line))
     }
 
-    fn scan_string(source: &str, line: usize) -> Result<Token, ScanError> {
+    fn scan_string(source: &str, line: usize) -> ScanResult<Token> {
         // skip first char because it is always a '"'
         source[1..]
             .find('"')
