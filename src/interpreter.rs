@@ -17,6 +17,8 @@ pub enum RuntimeError {
     ValueNotCallable(Value),
 }
 
+type InterpretResult<T> = Result<T, RuntimeError>;
+
 pub struct Interpreter {
     pub environment: Environment,
 }
@@ -35,7 +37,7 @@ impl Interpreter {
         }
     }
 
-    fn execute(&mut self, statement: &Stmt) -> Result<(), RuntimeError> {
+    fn execute(&mut self, statement: &Stmt) -> InterpretResult<()> {
         match statement {
             Stmt::Block(statements) => {
                 self.execute_block(statements, &self.environment.clone())?;
@@ -84,11 +86,7 @@ impl Interpreter {
         Ok(())
     }
 
-    pub fn execute_block(
-        &mut self,
-        statements: &[Stmt],
-        env: &Environment,
-    ) -> Result<(), RuntimeError> {
+    pub fn execute_block(&mut self, statements: &[Stmt], env: &Environment) -> InterpretResult<()> {
         self.environment = Environment::new_with_parent(env.clone());
 
         for statement in statements {
@@ -102,7 +100,7 @@ impl Interpreter {
         Ok(())
     }
 
-    fn execute_while(&mut self, condition: &Expr, body: &Stmt) -> Result<(), RuntimeError> {
+    fn execute_while(&mut self, condition: &Expr, body: &Stmt) -> InterpretResult<()> {
         while self.evaluate(condition)?.is_truthy() {
             self.execute(body)?;
         }
@@ -110,7 +108,7 @@ impl Interpreter {
         Ok(())
     }
 
-    fn evaluate(&mut self, expr: &Expr) -> Result<Value, RuntimeError> {
+    fn evaluate(&mut self, expr: &Expr) -> InterpretResult<Value> {
         match expr {
             Expr::Assign { name, value } => {
                 let v = self.evaluate(&*value)?;
@@ -170,7 +168,7 @@ impl Interpreter {
         }
     }
 
-    fn evaluate_unary(&mut self, operator: &Token, right: &Expr) -> Result<Value, RuntimeError> {
+    fn evaluate_unary(&mut self, operator: &Token, right: &Expr) -> InterpretResult<Value> {
         let result = self.evaluate(right)?;
 
         match operator.token_type {
@@ -189,7 +187,7 @@ impl Interpreter {
         left: &Expr,
         operator: &Token,
         right: &Expr,
-    ) -> Result<Value, RuntimeError> {
+    ) -> InterpretResult<Value> {
         match (self.evaluate(left)?, self.evaluate(right)?) {
             (Value::Number(l), Value::Number(r)) => match operator.token_type {
                 TokenType::Plus => Ok(Value::Number(l + r)),
