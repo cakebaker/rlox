@@ -1,23 +1,9 @@
 use crate::expr::Expr;
 use crate::literal::Literal;
+use crate::parse_error::ParseError;
 use crate::stmt::Stmt;
 use crate::token::Token;
 use crate::token_type::TokenType;
-
-#[derive(Debug)]
-pub struct ParseError {
-    pub token_type: TokenType,
-    pub message: String,
-}
-
-impl ParseError {
-    pub fn new(token_type: TokenType, message: &str) -> Self {
-        Self {
-            token_type,
-            message: message.to_string(),
-        }
-    }
-}
 
 type ParseResult<T> = Result<T, ParseError>;
 
