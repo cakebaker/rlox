@@ -6,8 +6,8 @@ use crate::token_type::TokenType;
 
 #[derive(Debug)]
 pub struct ParseError {
-    token_type: TokenType,
-    message: String,
+    pub token_type: TokenType,
+    pub message: String,
 }
 
 impl ParseError {
@@ -31,17 +31,22 @@ impl Parser {
         Self { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Vec<Stmt> {
+    pub fn parse(&mut self) -> Result<Vec<Stmt>, Vec<ParseError>> {
         let mut statements = Vec::new();
+        let mut errors = Vec::new();
 
         while !self.is_at_end() {
             match self.declaration() {
                 Ok(statement) => statements.push(statement),
-                Err(e) => println!("{:?}: {}", e.token_type, e.message), // TODO use reporter
+                Err(e) => errors.push(e),
             }
         }
 
-        statements
+        if errors.is_empty() {
+            Ok(statements)
+        } else {
+            Err(errors)
+        }
     }
 
     fn declaration(&mut self) -> ParseResult<Stmt> {

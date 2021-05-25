@@ -65,7 +65,16 @@ fn run(source: &str) {
     let tokens = scan_result.unwrap();
 
     let mut parser = Parser::new(tokens.clone());
-    let statements = parser.parse();
+    let parse_result = parser.parse();
+
+    if let Err(errors) = parse_result {
+        for error in errors {
+            eprintln!("{:?}: {}", error.token_type, error.message);
+        }
+        std::process::exit(65);
+    }
+
+    let statements = parse_result.unwrap();
     Interpreter::new().interpret(statements.clone());
 
     for token in tokens {
