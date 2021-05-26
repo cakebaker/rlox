@@ -48,19 +48,21 @@ impl Parser {
     fn function(&mut self, kind: &str) -> ParseResult<Stmt> {
         let name = self.consume(
             TokenType::Identifier,
-            ParseError::MissingName(kind.to_string()),
+            ParseError::MissingName(self.previous(), kind.to_string()),
         )?;
 
         self.consume(
             TokenType::LeftParen,
-            ParseError::MissingParenAfterName(kind.to_string()),
+            ParseError::MissingParenAfterName(name.clone(), kind.to_string()),
         )?;
         let mut parameters = Vec::new();
 
         if !self.check(&TokenType::RightParen) {
             loop {
-                parameters
-                    .push(self.consume(TokenType::Identifier, ParseError::MissingParameterName)?);
+                parameters.push(self.consume(
+                    TokenType::Identifier,
+                    ParseError::MissingParameterName(self.previous()),
+                )?);
 
                 if self.check(&TokenType::RightParen) {
                     break;
@@ -72,11 +74,11 @@ impl Parser {
 
         self.consume(
             TokenType::RightParen,
-            ParseError::MissingParenAfterParameters,
+            ParseError::MissingParenAfterParameters(self.previous()),
         )?;
         self.consume(
             TokenType::LeftBrace,
-            ParseError::MissingBraceBeforeBody(kind.to_string()),
+            ParseError::MissingBraceBeforeBody(self.previous(), kind.to_string()),
         )?;
 
         if let Stmt::Block(body) = self.block_statement()? {
@@ -88,7 +90,10 @@ impl Parser {
     }
 
     fn var_declaration(&mut self) -> ParseResult<Stmt> {
-        let name = self.consume(TokenType::Identifier, ParseError::MissingVariableName)?;
+        let name = self.consume(
+            TokenType::Identifier,
+            ParseError::MissingVariableName(self.previous()),
+        )?;
 
         let initializer = if self.do_match(vec![TokenType::Equal]) {
             Some(self.expression()?)
@@ -98,7 +103,7 @@ impl Parser {
 
         self.consume(
             TokenType::Semicolon,
-            ParseError::MissingSemicolonAfterVariableDeclaration,
+            ParseError::MissingSemicolonAfterVariableDeclaration(name.clone()),
         )?;
         Ok(Stmt::Var(name, initializer))
     }
@@ -132,14 +137,17 @@ impl Parser {
 
         self.consume(
             TokenType::Semicolon,
-            ParseError::MissingSemicolonAfterReturnValue,
+            ParseError::MissingSemicolonAfterReturnValue(keyword.clone()),
         )?;
 
         Ok(Stmt::Return(keyword, value))
     }
 
     fn for_statement(&mut self) -> ParseResult<Stmt> {
-        self.consume(TokenType::LeftParen, ParseError::MissingParenAfterFor)?;
+        self.consume(
+            TokenType::LeftParen,
+            ParseError::MissingParenAfterFor(self.previous()),
+        )?;
 
         let initializer = if self.do_match(vec![TokenType::Semicolon]) {
             None
@@ -156,7 +164,7 @@ impl Parser {
         };
         self.consume(
             TokenType::Semicolon,
-            ParseError::MissingSemicolonAfterLoopCondition,
+            ParseError::MissingSemicolonAfterLoopCondition(self.previous()),
         )?;
 
         let increment = if self.check(&TokenType::RightParen) {
@@ -166,7 +174,7 @@ impl Parser {
         };
         self.consume(
             TokenType::RightParen,
-            ParseError::MissingParenAfterForClauses,
+            ParseError::MissingParenAfterForClauses(self.previous()),
         )?;
 
         let mut body = self.statement()?;
@@ -188,11 +196,14 @@ impl Parser {
     }
 
     fn while_statement(&mut self) -> ParseResult<Stmt> {
-        self.consume(TokenType::LeftParen, ParseError::MissingParenAfterWhile)?;
+        self.consume(
+            TokenType::LeftParen,
+            ParseError::MissingParenAfterWhile(self.previous()),
+        )?;
         let condition = self.expression()?;
         self.consume(
             TokenType::RightParen,
-            ParseError::MissingParenAfterWhileCondition,
+            ParseError::MissingParenAfterWhileCondition(self.previous()),
         )?;
 
         let body = Box::new(self.statement()?);
@@ -201,11 +212,14 @@ impl Parser {
     }
 
     fn if_statement(&mut self) -> ParseResult<Stmt> {
-        self.consume(TokenType::LeftParen, ParseError::MissingParenAfterIf)?;
+        self.consume(
+            TokenType::LeftParen,
+            ParseError::MissingParenAfterIf(self.previous()),
+        )?;
         let condition = self.expression()?;
         self.consume(
             TokenType::RightParen,
-            ParseError::MissingParenAfterIfCondition,
+            ParseError::MissingParenAfterIfCondition(self.previous()),
         )?;
 
         let then_branch = Box::new(self.statement()?);
@@ -221,7 +235,10 @@ impl Parser {
 
     fn print_statement(&mut self) -> ParseResult<Stmt> {
         let expr = self.expression()?;
-        self.consume(TokenType::Semicolon, ParseError::MissingSemicolonAfterValue)?;
+        self.consume(
+            TokenType::Semicolon,
+            ParseError::MissingSemicolonAfterValue(self.previous()),
+        )?;
         Ok(Stmt::Print(expr))
     }
 
@@ -232,14 +249,20 @@ impl Parser {
             statements.push(self.declaration()?);
         }
 
-        self.consume(TokenType::RightBrace, ParseError::MissingBraceAfterBlock)?;
+        self.consume(
+            TokenType::RightBrace,
+            ParseError::MissingBraceAfterBlock(self.previous()),
+        )?;
 
         Ok(Stmt::Block(statements))
     }
 
     fn expression_statement(&mut self) -> ParseResult<Stmt> {
         let expr = self.expression()?;
-        self.consume(TokenType::Semicolon, ParseError::MissingSemicolonAfterValue)?;
+        self.consume(
+            TokenType::Semicolon,
+            ParseError::MissingSemicolonAfterValue(self.previous()),
+        )?;
         Ok(Stmt::Expr(expr))
     }
 
@@ -411,7 +434,7 @@ impl Parser {
 
         let paren = self.consume(
             TokenType::RightParen,
-            ParseError::MissingParenAfterArguments,
+            ParseError::MissingParenAfterArguments(self.previous()),
         )?;
 
         Ok(Expr::Call {
@@ -435,13 +458,13 @@ impl Parser {
                 let expr = self.expression()?;
                 self.consume(
                     TokenType::RightParen,
-                    ParseError::MissingParenAfterExpression,
+                    ParseError::MissingParenAfterExpression(token),
                 )?;
                 Ok(Expr::Grouping {
                     expression: Box::new(expr),
                 })
             }
-            _ => Err(ParseError::InvalidToken(token.token_type)),
+            _ => Err(ParseError::InvalidToken(token)),
         }
     }
 

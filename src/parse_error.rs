@@ -1,29 +1,29 @@
-use crate::token_type::TokenType;
+use crate::token::Token;
 use std::error::Error;
 use std::fmt;
 
 #[derive(Debug)]
 pub enum ParseError {
-    InvalidToken(TokenType),
-    MissingBraceAfterBlock,
-    MissingBraceBeforeBody(String),
-    MissingName(String),
-    MissingParameterName,
-    MissingParenAfterArguments,
-    MissingParenAfterExpression,
-    MissingParenAfterFor,
-    MissingParenAfterForClauses,
-    MissingParenAfterIf,
-    MissingParenAfterIfCondition,
-    MissingParenAfterName(String),
-    MissingParenAfterParameters,
-    MissingParenAfterWhile,
-    MissingParenAfterWhileCondition,
-    MissingSemicolonAfterLoopCondition,
-    MissingSemicolonAfterReturnValue,
-    MissingSemicolonAfterValue,
-    MissingSemicolonAfterVariableDeclaration,
-    MissingVariableName,
+    InvalidToken(Token),
+    MissingBraceAfterBlock(Token),
+    MissingBraceBeforeBody(Token, String),
+    MissingName(Token, String),
+    MissingParameterName(Token),
+    MissingParenAfterArguments(Token),
+    MissingParenAfterExpression(Token),
+    MissingParenAfterFor(Token),
+    MissingParenAfterForClauses(Token),
+    MissingParenAfterIf(Token),
+    MissingParenAfterIfCondition(Token),
+    MissingParenAfterName(Token, String),
+    MissingParenAfterParameters(Token),
+    MissingParenAfterWhile(Token),
+    MissingParenAfterWhileCondition(Token),
+    MissingSemicolonAfterLoopCondition(Token),
+    MissingSemicolonAfterReturnValue(Token),
+    MissingSemicolonAfterValue(Token),
+    MissingSemicolonAfterVariableDeclaration(Token),
+    MissingVariableName(Token),
     UnexpectedError,
 }
 
@@ -32,65 +32,89 @@ impl Error for ParseError {}
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::InvalidToken(token_type) => {
-                write!(f, "{}: Invalid token.", token_type)
+            Self::InvalidToken(token) => {
+                write!(
+                    f,
+                    "Invalid token '{}' on line {}.",
+                    token.lexeme, token.line
+                )
             }
-            Self::MissingBraceAfterBlock => {
-                write!(f, "Expect '}}' after block.")
+            Self::MissingBraceAfterBlock(token) => {
+                write!(f, "Expect '}}' after block on line {}.", token.line)
             }
-            Self::MissingBraceBeforeBody(kind) => {
-                write!(f, "Expect '{{' before {} body.", kind)
+            Self::MissingBraceBeforeBody(token, kind) => {
+                write!(
+                    f,
+                    "Expect '{{' before {} body on line {}.",
+                    kind, token.line
+                )
             }
-            Self::MissingName(kind) => {
-                write!(f, "Expect {} name.", kind)
+            Self::MissingName(token, kind) => {
+                write!(f, "Expect {} name on line {}.", kind, token.line)
             }
-            Self::MissingParameterName => {
-                write!(f, "Expect parameter name.")
+            Self::MissingParameterName(token) => {
+                write!(f, "Expect parameter name on line {}.", token.line)
             }
-            Self::MissingParenAfterArguments => {
-                write!(f, "Expect ')' after arguments.")
+            Self::MissingParenAfterArguments(token) => {
+                write!(f, "Expect ')' after arguments on line {}.", token.line)
             }
-            Self::MissingParenAfterExpression => {
-                write!(f, "Expect ')' after expression.")
+            Self::MissingParenAfterExpression(token) => {
+                write!(f, "Expect ')' after expression on line {}.", token.line)
             }
-            Self::MissingParenAfterFor => {
-                write!(f, "Expect ')' after 'for'.")
+            Self::MissingParenAfterFor(token) => {
+                write!(f, "Expect '(' after 'for' on line {}.", token.line)
             }
-            Self::MissingParenAfterForClauses => {
-                write!(f, "Expect ')' after 'for' clauses.")
+            Self::MissingParenAfterForClauses(token) => {
+                write!(f, "Expect ')' after 'for' clauses on line {}.", token.line)
             }
-            Self::MissingParenAfterIf => {
-                write!(f, "Expect '(' after 'if'.")
+            Self::MissingParenAfterIf(token) => {
+                write!(f, "Expect '(' after 'if' on line {}.", token.line)
             }
-            Self::MissingParenAfterIfCondition => {
-                write!(f, "Expect ')' after 'if' condition.")
+            Self::MissingParenAfterIfCondition(token) => {
+                write!(f, "Expect ')' after 'if' condition on line {}.", token.line)
             }
-            Self::MissingParenAfterName(kind) => {
-                write!(f, "Expect '(' after {} name.", kind)
+            Self::MissingParenAfterName(token, kind) => {
+                write!(
+                    f,
+                    "Expect '(' after {} name '{}' on line {}.",
+                    kind, token.lexeme, token.line
+                )
             }
-            Self::MissingParenAfterParameters => {
-                write!(f, "Expect ')' after parameters.")
+            Self::MissingParenAfterParameters(token) => {
+                write!(f, "Expect ')' after parameters on line {}.", token.line)
             }
-            Self::MissingParenAfterWhile => {
-                write!(f, "Expect '(' after 'while'.")
+            Self::MissingParenAfterWhile(token) => {
+                write!(f, "Expect '(' after 'while' on line {}.", token.line)
             }
-            Self::MissingParenAfterWhileCondition => {
-                write!(f, "Expect ')' after 'while' condition.")
+            Self::MissingParenAfterWhileCondition(token) => {
+                write!(
+                    f,
+                    "Expect ')' after 'while' condition on line {}.",
+                    token.line
+                )
             }
-            Self::MissingSemicolonAfterLoopCondition => {
-                write!(f, "Expect ';' after loop condition.")
+            Self::MissingSemicolonAfterLoopCondition(token) => {
+                write!(f, "Expect ';' after loop condition on line {}.", token.line)
             }
-            Self::MissingSemicolonAfterReturnValue => {
-                write!(f, "Expect ';' after return value.")
+            Self::MissingSemicolonAfterReturnValue(token) => {
+                write!(f, "Expect ';' after return value on line {}.", token.line)
             }
-            Self::MissingSemicolonAfterValue => {
-                write!(f, "Expect ';' after value.")
+            Self::MissingSemicolonAfterValue(token) => {
+                write!(
+                    f,
+                    "Expect ';' after value '{}' on line {}.",
+                    token.lexeme, token.line
+                )
             }
-            Self::MissingSemicolonAfterVariableDeclaration => {
-                write!(f, "Expect ';' after variable declaration.")
+            Self::MissingSemicolonAfterVariableDeclaration(token) => {
+                write!(
+                    f,
+                    "Expect ';' after declaration of variable '{}' on line {}.",
+                    token.lexeme, token.line
+                )
             }
-            Self::MissingVariableName => {
-                write!(f, "Expect variable name.")
+            Self::MissingVariableName(token) => {
+                write!(f, "Expect variable name on line {}.", token.line)
             }
             Self::UnexpectedError => {
                 write!(f, "Unexpected error.")
