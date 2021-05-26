@@ -70,7 +70,7 @@ fn run(source: &str) {
 
     if let Err(errors) = parse_result {
         for error in errors {
-            eprintln!("{:?}: {}", error.token_type, error.message);
+            eprintln!("{}", error);
         }
         std::process::exit(65);
     }
