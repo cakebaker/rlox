@@ -7,7 +7,7 @@ type ScanResult<T> = Result<T, ScanError>;
 pub struct Scanner {}
 
 impl Scanner {
-    pub fn scan_tokens(source: &str) -> ScanResult<Vec<Token>> {
+    pub fn scan(source: &str) -> ScanResult<Vec<Token>> {
         let tokens = vec![];
         let initial_line = 1;
         Self::scan_token(source, tokens, initial_line)
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn scan_empty_string() {
-        let result = Scanner::scan_tokens("").unwrap();
+        let result = Scanner::scan("").unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].token_type, TokenType::Eof);
         assert_eq!(result[0].line, 1);
@@ -185,7 +185,7 @@ mod tests {
         ];
 
         for (string, expected_token_type) in strings_and_token_types {
-            let result = Scanner::scan_tokens(string).unwrap();
+            let result = Scanner::scan(string).unwrap();
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, expected_token_type);
             assert_eq!(result[1].token_type, TokenType::Eof);
@@ -206,7 +206,7 @@ mod tests {
         ];
 
         for (string, expected_token_type) in strings_and_token_types {
-            let result = Scanner::scan_tokens(string).unwrap();
+            let result = Scanner::scan(string).unwrap();
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, expected_token_type);
             assert_eq!(result[1].token_type, TokenType::Eof);
@@ -215,11 +215,11 @@ mod tests {
 
     #[test]
     fn ignore_comments() {
-        let mut result = Scanner::scan_tokens("// a comment").unwrap();
+        let mut result = Scanner::scan("// a comment").unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].token_type, TokenType::Eof);
 
-        result = Scanner::scan_tokens("// a comment\n;").unwrap();
+        result = Scanner::scan("// a comment\n;").unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(result[0].token_type, TokenType::Semicolon);
         assert_eq!(result[1].token_type, TokenType::Eof);
@@ -230,7 +230,7 @@ mod tests {
         let strings = vec![" ", "\r", "\t"];
 
         for string in strings {
-            let result = Scanner::scan_tokens(string).unwrap();
+            let result = Scanner::scan(string).unwrap();
             assert_eq!(result.len(), 1);
             assert_eq!(result[0].token_type, TokenType::Eof);
         }
@@ -238,7 +238,7 @@ mod tests {
 
     #[test]
     fn increase_line_counter_after_linebreak() {
-        let result = Scanner::scan_tokens("\n").unwrap();
+        let result = Scanner::scan("\n").unwrap();
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].token_type, TokenType::Eof);
         assert_eq!(result[0].line, 2);
@@ -246,7 +246,7 @@ mod tests {
 
     #[test]
     fn scan_string_literals() {
-        let result = Scanner::scan_tokens("\"A string\"").unwrap();
+        let result = Scanner::scan("\"A string\"").unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(
             result[0].token_type,
@@ -258,7 +258,7 @@ mod tests {
 
     #[test]
     fn scan_unterminated_string() {
-        match Scanner::scan_tokens("\"A string") {
+        match Scanner::scan("\"A string") {
             Err(ScanError::UnterminatedString(_)) => assert!(true),
             _ => assert!(false),
         }
@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn scan_multiline_strings() {
-        let result = Scanner::scan_tokens("\"Line A\nLine B\"").unwrap();
+        let result = Scanner::scan("\"Line A\nLine B\"").unwrap();
         assert_eq!(result.len(), 2);
         assert_eq!(
             result[0].token_type,
@@ -281,7 +281,7 @@ mod tests {
         let numbers_and_literals = vec![("123", 123 as f64), ("123.45", 123.45)];
 
         for (number, literal) in numbers_and_literals {
-            let result = Scanner::scan_tokens(number).unwrap();
+            let result = Scanner::scan(number).unwrap();
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, TokenType::Number(literal));
             assert_eq!(result[0].lexeme, number);
@@ -291,7 +291,7 @@ mod tests {
 
     #[test]
     fn scan_invalid_number() {
-        match Scanner::scan_tokens("123.") {
+        match Scanner::scan("123.") {
             Err(ScanError::NumberEndsWithDot(_)) => assert!(true),
             _ => assert!(false),
         }
@@ -302,7 +302,7 @@ mod tests {
         let identifiers = vec!["_id", "id", "ID", "i_d"];
 
         for identifier in identifiers {
-            let result = Scanner::scan_tokens(identifier).unwrap();
+            let result = Scanner::scan(identifier).unwrap();
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, TokenType::Identifier);
             assert_eq!(result[1].token_type, TokenType::Eof);
@@ -331,7 +331,7 @@ mod tests {
         ];
 
         for (keyword, token_type) in keywords_and_token_types {
-            let result = Scanner::scan_tokens(keyword).unwrap();
+            let result = Scanner::scan(keyword).unwrap();
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].token_type, token_type);
             assert_eq!(result[1].token_type, TokenType::Eof);
@@ -343,7 +343,7 @@ mod tests {
         let invalid_chars = vec!["@", "ä"];
 
         for invalid_char in invalid_chars {
-            match Scanner::scan_tokens(invalid_char) {
+            match Scanner::scan(invalid_char) {
                 Err(ScanError::UnexpectedChar(_, _)) => assert!(true),
                 _ => assert!(false),
             }

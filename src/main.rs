@@ -55,7 +55,7 @@ fn run_file(path: &str) {
 }
 
 fn run(source: &str) {
-    let scan_result = Scanner::scan_tokens(source);
+    let scan_result = Scanner::scan(source);
 
     if scan_result.is_err() {
         eprintln!("{}", scan_result.unwrap_err());
