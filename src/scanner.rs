@@ -90,10 +90,10 @@ impl Scanner {
 
         let token_type = match Self::get_type_if_keyword(&identifier) {
             Some(keyword_type) => keyword_type,
-            None => TokenType::Identifier,
+            None => TokenType::Identifier(identifier),
         };
 
-        Token::new_with_lexeme(token_type, identifier, line)
+        Token::new(token_type, line)
     }
 
     fn scan_number(source: &str, line: usize) -> ScanResult<Token> {
@@ -304,7 +304,10 @@ mod tests {
         for identifier in identifiers {
             let result = Scanner::scan(identifier).unwrap();
             assert_eq!(result.len(), 2);
-            assert_eq!(result[0].token_type, TokenType::Identifier);
+            assert_eq!(
+                result[0].token_type,
+                TokenType::Identifier(identifier.to_string())
+            );
             assert_eq!(result[1].token_type, TokenType::Eof);
         }
     }

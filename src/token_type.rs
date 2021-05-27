@@ -26,7 +26,7 @@ pub enum TokenType {
     LessEqual,
 
     // Literals
-    Identifier, // TODO should be Identifier(String)
+    Identifier(String),
     String(String),
     Number(f64),
 
@@ -73,7 +73,7 @@ impl fmt::Display for TokenType {
             Self::GreaterEqual => write!(f, ">="),
             Self::Less => write!(f, "<"),
             Self::LessEqual => write!(f, "<="),
-            Self::Identifier => write!(f, "identifier"), // TODO fix, see other todo above
+            Self::Identifier(id) => write!(f, "{}", id),
             Self::String(s) => write!(f, "{}", s),
             Self::Number(n) => write!(f, "{}", n),
             Self::And => write!(f, "and"),

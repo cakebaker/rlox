@@ -46,10 +46,8 @@ impl Parser {
     }
 
     fn function(&mut self, kind: &str) -> ParseResult<Stmt> {
-        let name = self.consume(
-            TokenType::Identifier,
-            ParseError::MissingName(self.previous(), kind.to_string()),
-        )?;
+        let name =
+            self.consume_identifier(ParseError::MissingName(self.previous(), kind.to_string()))?;
 
         self.consume(
             TokenType::LeftParen,
@@ -59,10 +57,9 @@ impl Parser {
 
         if !self.check(&TokenType::RightParen) {
             loop {
-                parameters.push(self.consume(
-                    TokenType::Identifier,
-                    ParseError::MissingParameterName(self.previous()),
-                )?);
+                parameters.push(
+                    self.consume_identifier(ParseError::MissingParameterName(self.previous()))?,
+                );
 
                 if self.check(&TokenType::RightParen) {
                     break;
@@ -90,10 +87,7 @@ impl Parser {
     }
 
     fn var_declaration(&mut self) -> ParseResult<Stmt> {
-        let name = self.consume(
-            TokenType::Identifier,
-            ParseError::MissingVariableName(self.previous()),
-        )?;
+        let name = self.consume_identifier(ParseError::MissingVariableName(self.previous()))?;
 
         let initializer = if self.do_match(vec![TokenType::Equal]) {
             Some(self.expression()?)
@@ -453,7 +447,7 @@ impl Parser {
             TokenType::Nil => Ok(Expr::Literal(Literal::Nil)),
             TokenType::Number(number) => Ok(Expr::Literal(Literal::Number(number))),
             TokenType::String(string) => Ok(Expr::Literal(Literal::String(string))),
-            TokenType::Identifier => Ok(Expr::Variable(self.previous())),
+            TokenType::Identifier(_) => Ok(Expr::Variable(self.previous())),
             TokenType::LeftParen => {
                 let expr = self.expression()?;
                 self.consume(
@@ -484,6 +478,13 @@ impl Parser {
             Ok(self.advance())
         } else {
             Err(error)
+        }
+    }
+
+    fn consume_identifier(&mut self, error: ParseError) -> ParseResult<Token> {
+        match self.peek().token_type {
+            TokenType::Identifier(_) => Ok(self.advance()),
+            _ => Err(error),
         }
     }
 
