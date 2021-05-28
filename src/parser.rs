@@ -448,7 +448,8 @@ impl Parser {
             TokenType::Number(number) => Ok(Expr::Literal(Literal::Number(number))),
             TokenType::String(string) => Ok(Expr::Literal(Literal::String(string))),
             TokenType::Identifier(_) => Ok(Expr::Variable(self.previous())),
-            TokenType::LeftParen => {
+            // XXX a '(' at the end causes a stack overflow
+            TokenType::LeftParen if !self.is_at_end() => {
                 let expr = self.expression()?;
                 self.consume(
                     TokenType::RightParen,
@@ -570,6 +571,7 @@ mod tests {
     #[test]
     fn parse_invalid_statements() {
         let codes_and_expected_errors = vec![
+            ("(", ParseError::InvalidToken(token(TokenType::LeftParen))),
             (")", ParseError::InvalidToken(token(TokenType::RightParen))),
             (
                 "(1 + 2",
