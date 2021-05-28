@@ -522,6 +522,8 @@ mod tests {
     use super::Parser;
     use crate::expr::Expr;
     use crate::literal::Literal;
+    use crate::parse_error::ParseError;
+    use crate::scanner::Scanner;
     use crate::token::Token;
     use crate::token_type::TokenType;
 
@@ -562,6 +564,101 @@ mod tests {
             );
         } else {
             panic!("parser.parse() returned unexpected Err");
+        }
+    }
+
+    #[test]
+    fn parse_invalid_statements() {
+        let codes_and_expected_errors = vec![
+            (")", ParseError::InvalidToken(token(TokenType::RightParen))),
+            (
+                "(1 + 2",
+                ParseError::MissingParenAfterExpression(token(TokenType::LeftParen)),
+            ),
+            (
+                "{ x = 0;",
+                ParseError::MissingBraceAfterBlock(token(TokenType::Semicolon)),
+            ),
+            (
+                "1",
+                ParseError::MissingSemicolonAfterValue(token(TokenType::Number(1.0))),
+            ),
+            (
+                "for",
+                ParseError::MissingParenAfterFor(token(TokenType::For)),
+            ),
+            (
+                "for (x = 0; x < 10",
+                ParseError::MissingSemicolonAfterLoopCondition(token(TokenType::Number(10.0))),
+            ),
+            (
+                "for (x = 0; x < 10; x + 1",
+                ParseError::MissingParenAfterForClauses(token(TokenType::Number(1.0))),
+            ),
+            (
+                "fun",
+                ParseError::MissingName(token(TokenType::Fun), "function".to_string()),
+            ),
+            (
+                "fun xyz",
+                ParseError::MissingParenAfterName(
+                    token(TokenType::Identifier("xyz".to_string())),
+                    "function".to_string(),
+                ),
+            ),
+            (
+                "fun xyz(",
+                ParseError::MissingParameterName(token(TokenType::LeftParen)),
+            ),
+            (
+                "fun xyz()",
+                ParseError::MissingBraceBeforeBody(
+                    token(TokenType::RightParen),
+                    "function".to_string(),
+                ),
+            ),
+            (
+                "fun xyz() { return 0 }",
+                ParseError::MissingSemicolonAfterReturnValue(token(TokenType::Return)),
+            ),
+            ("if", ParseError::MissingParenAfterIf(token(TokenType::If))),
+            (
+                "if (x < y",
+                ParseError::MissingParenAfterIfCondition(token(TokenType::Identifier(
+                    "y".to_string(),
+                ))),
+            ),
+            (
+                "var",
+                ParseError::MissingVariableName(token(TokenType::Var)),
+            ),
+            (
+                "var x = 123",
+                ParseError::MissingSemicolonAfterVariableDeclaration(token(TokenType::Identifier(
+                    "x".to_string(),
+                ))),
+            ),
+            (
+                "while",
+                ParseError::MissingParenAfterWhile(token(TokenType::While)),
+            ),
+            (
+                "while (x < y",
+                ParseError::MissingParenAfterWhileCondition(token(TokenType::Identifier(
+                    "y".to_string(),
+                ))),
+            ),
+            (
+                "xyz(true",
+                ParseError::MissingParenAfterArguments(token(TokenType::True)),
+            ),
+        ];
+
+        for (code, expected_error) in codes_and_expected_errors {
+            let parse_errors = Parser::new(Scanner::scan(code).unwrap())
+                .parse()
+                .unwrap_err();
+            assert_eq!(expected_error, parse_errors[0]);
         }
     }
 

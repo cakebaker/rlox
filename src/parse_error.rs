@@ -2,7 +2,7 @@ use crate::token::Token;
 use std::error::Error;
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ParseError {
     InvalidToken(Token),
     MissingBraceAfterBlock(Token),
