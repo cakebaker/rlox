@@ -1,4 +1,4 @@
-use crate::interpreter::RuntimeError;
+use crate::runtime_error::RuntimeError;
 use crate::value::Value;
 use std::cell::RefCell;
 use std::collections::HashMap;

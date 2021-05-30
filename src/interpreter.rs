@@ -3,19 +3,11 @@ use crate::environment::Environment;
 use crate::expr::Expr;
 use crate::literal::Literal;
 use crate::lox_function::LoxFunction;
+use crate::runtime_error::RuntimeError;
 use crate::stmt::Stmt;
 use crate::token::Token;
 use crate::token_type::TokenType;
 use crate::value::Value;
-
-#[derive(Debug)]
-pub enum RuntimeError {
-    InvalidOperator,
-    InvalidType,
-    Return(Value),
-    UndefinedVariable(String),
-    ValueNotCallable(Value),
-}
 
 type InterpretResult<T> = Result<T, RuntimeError>;
 

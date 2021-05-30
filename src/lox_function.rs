@@ -1,7 +1,7 @@
 use crate::environment::Environment;
 use crate::interpreter::Interpreter;
-use crate::interpreter::RuntimeError;
 use crate::lox_callable::LoxCallable;
+use crate::runtime_error::RuntimeError;
 use crate::stmt::Stmt;
 use crate::token::Token;
 use crate::value::Value;
