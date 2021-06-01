@@ -14,6 +14,10 @@ impl Token {
             _ => token_type.to_string(),
         };
 
+        Self::new_with_lexeme(token_type, lexeme, line)
+    }
+
+    pub const fn new_with_lexeme(token_type: TokenType, lexeme: String, line: usize) -> Self {
         Self {
             token_type,
             lexeme,

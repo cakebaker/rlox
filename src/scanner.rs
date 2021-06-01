@@ -113,7 +113,14 @@ impl Scanner {
         }
 
         let number = &source[..munched_chars];
-        Ok(Token::new(TokenType::Number(number.parse().unwrap()), line))
+
+        // explicitly set lexeme so we can differentiate between 1 and 1.0 because the TokenType is
+        // the same in both cases and hence the lexeme can't be derived from it
+        Ok(Token::new_with_lexeme(
+            TokenType::Number(number.parse().unwrap()),
+            number.to_string(),
+            line,
+        ))
     }
 
     fn scan_string(source: &str, line: usize) -> ScanResult<Token> {
@@ -278,7 +285,7 @@ mod tests {
 
     #[test]
     fn scan_number_literals() {
-        let numbers_and_literals = vec![("123", 123 as f64), ("123.45", 123.45)];
+        let numbers_and_literals = vec![("123", 123 as f64), ("123.45", 123.45), ("123.0", 123.0)];
 
         for (number, literal) in numbers_and_literals {
             let result = Scanner::scan(number).unwrap();
