@@ -541,8 +541,9 @@ mod tests {
             operator: token(TokenType::Bang),
             right: Box::new(Expr::Literal(Literal::Bool(false))),
         });
-        let result = &Parser::new().parse(Scanner::scan(code).unwrap()).unwrap()[0];
-        assert_eq!(expected, *result);
+
+        let result = parse(code).unwrap();
+        assert_eq!(expected, result[0]);
     }
 
     #[test]
@@ -552,8 +553,9 @@ mod tests {
             operator: token(TokenType::Minus),
             right: Box::new(Expr::Literal(Literal::Number(1.0))),
         });
-        let result = &Parser::new().parse(Scanner::scan(code).unwrap()).unwrap()[0];
-        assert_eq!(expected, *result);
+
+        let result = parse(code).unwrap();
+        assert_eq!(expected, result[0]);
     }
 
     #[test]
@@ -645,11 +647,13 @@ mod tests {
         ];
 
         for (code, expected_error) in codes_and_expected_errors {
-            let parse_errors = Parser::new()
-                .parse(Scanner::scan(code).unwrap())
-                .unwrap_err();
+            let parse_errors = parse(code).unwrap_err();
             assert_eq!(expected_error, parse_errors[0]);
         }
+    }
+
+    fn parse(code: &str) -> Result<Vec<Stmt>, Vec<ParseError>> {
+        Parser::new().parse(Scanner::scan(code).unwrap())
     }
 
     fn token(token_type: TokenType) -> Token {
