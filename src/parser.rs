@@ -13,11 +13,16 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens, current: 0 }
+    pub const fn new() -> Self {
+        Self {
+            tokens: Vec::new(),
+            current: 0,
+        }
     }
 
-    pub fn parse(&mut self) -> Result<Vec<Stmt>, Vec<ParseError>> {
+    pub fn parse(&mut self, tokens: Vec<Token>) -> Result<Vec<Stmt>, Vec<ParseError>> {
+        self.tokens = tokens;
+        self.current = 0;
         let mut statements = Vec::new();
         let mut errors = Vec::new();
 
@@ -525,47 +530,30 @@ mod tests {
     use crate::literal::Literal;
     use crate::parse_error::ParseError;
     use crate::scanner::Scanner;
+    use crate::stmt::Stmt;
     use crate::token::Token;
     use crate::token_type::TokenType;
 
     #[test]
     fn parse_unary_bang() {
-        let mut parser = Parser::new(vec![
-            token(TokenType::Bang),
-            token(TokenType::False),
-            token(TokenType::Eof),
-        ]);
-        if let Ok(result) = parser.expression() {
-            assert_eq!(
-                Expr::Unary {
-                    operator: token(TokenType::Bang),
-                    right: Box::new(Expr::Literal(Literal::Bool(false)))
-                },
-                result
-            );
-        } else {
-            panic!("parser.parse() returned unexpected Err");
-        }
+        let code = "!false;";
+        let expected = Stmt::Expr(Expr::Unary {
+            operator: token(TokenType::Bang),
+            right: Box::new(Expr::Literal(Literal::Bool(false))),
+        });
+        let result = &Parser::new().parse(Scanner::scan(code).unwrap()).unwrap()[0];
+        assert_eq!(expected, *result);
     }
 
     #[test]
     fn parse_unary_minus() {
-        let mut parser = Parser::new(vec![
-            token(TokenType::Minus),
-            token(TokenType::Number(1.0)),
-            token(TokenType::Eof),
-        ]);
-        if let Ok(result) = parser.expression() {
-            assert_eq!(
-                Expr::Unary {
-                    operator: token(TokenType::Minus),
-                    right: Box::new(Expr::Literal(Literal::Number(1.0)))
-                },
-                result
-            );
-        } else {
-            panic!("parser.parse() returned unexpected Err");
-        }
+        let code = "-1;";
+        let expected = Stmt::Expr(Expr::Unary {
+            operator: token(TokenType::Minus),
+            right: Box::new(Expr::Literal(Literal::Number(1.0))),
+        });
+        let result = &Parser::new().parse(Scanner::scan(code).unwrap()).unwrap()[0];
+        assert_eq!(expected, *result);
     }
 
     #[test]
@@ -657,8 +645,8 @@ mod tests {
         ];
 
         for (code, expected_error) in codes_and_expected_errors {
-            let parse_errors = Parser::new(Scanner::scan(code).unwrap())
-                .parse()
+            let parse_errors = Parser::new()
+                .parse(Scanner::scan(code).unwrap())
                 .unwrap_err();
             assert_eq!(expected_error, parse_errors[0]);
         }

@@ -66,8 +66,7 @@ fn run(source: &str) {
 
     let tokens = scan_result.unwrap();
 
-    let mut parser = Parser::new(tokens.clone());
-    let parse_result = parser.parse();
+    let parse_result = Parser::new().parse(tokens.clone());
 
     if let Err(errors) = parse_result {
         for error in errors {
