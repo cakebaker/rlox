@@ -23,10 +23,12 @@ impl Interpreter {
         Self { environment: env }
     }
 
-    pub fn interpret(&mut self, statements: Vec<Stmt>) {
+    pub fn interpret(&mut self, statements: Vec<Stmt>) -> InterpretResult<()> {
         for statement in statements {
-            self.execute(&statement);
+            self.execute(&statement)?;
         }
+
+        Ok(())
     }
 
     fn execute(&mut self, statement: &Stmt) -> InterpretResult<()> {

@@ -76,7 +76,11 @@ fn run(source: &str) {
     }
 
     let statements = parse_result.unwrap();
-    Interpreter::new().interpret(statements.clone());
+    let interpret_result = Interpreter::new().interpret(statements.clone());
+
+    if interpret_result.is_err() {
+        eprintln!("{}", interpret_result.unwrap_err());
+    }
 
     for token in tokens {
         println!("{:?}", token);
