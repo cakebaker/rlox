@@ -168,7 +168,7 @@ impl Interpreter {
         match operator.token_type {
             TokenType::Minus => match result {
                 Value::Number(number) => Ok(Value::Number(-number)),
-                _ => Err(RuntimeError::InvalidType),
+                _ => Err(RuntimeError::NumberExpectedAfterMinus(operator.line)),
             },
             TokenType::Bang => Ok(Value::Bool(!&result.is_truthy())),
             _ => Err(RuntimeError::InvalidOperator),
@@ -226,6 +226,7 @@ mod tests {
     use super::Interpreter;
     use crate::expr::Expr;
     use crate::literal::Literal;
+    use crate::runtime_error::RuntimeError;
     use crate::stmt::Stmt;
     use crate::token::Token;
     use crate::token_type::TokenType;
@@ -278,6 +279,20 @@ mod tests {
             assert_eq!(Value::Number(-1.0), result);
         } else {
             panic!("Interpreter::evaluate() returned unexpected Err");
+        }
+    }
+
+    #[test]
+    fn evaluate_negation_of_invalid_type() {
+        let expr = Expr::Unary {
+            operator: token(TokenType::Minus),
+            right: Box::new(Expr::Literal(Literal::Nil)),
+        };
+
+        let err = Interpreter::new().evaluate(&expr).unwrap_err();
+        match err {
+            RuntimeError::NumberExpectedAfterMinus(_) => assert!(true),
+            _ => assert!(false),
         }
     }
 
