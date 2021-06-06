@@ -171,7 +171,7 @@ impl Interpreter {
                 _ => Err(RuntimeError::NumberExpectedAfterMinus(operator.line)),
             },
             TokenType::Bang => Ok(Value::Bool(!&result.is_truthy())),
-            _ => Err(RuntimeError::InvalidOperator),
+            _ => Err(RuntimeError::InvalidOperator(operator.clone())),
         }
     }
 
@@ -194,28 +194,28 @@ impl Interpreter {
                 TokenType::LessEqual => Ok(Value::Bool(l <= r)),
                 TokenType::EqualEqual => Ok(Value::Bool(l == r)),
                 TokenType::BangEqual => Ok(Value::Bool(l != r)),
-                _ => Err(RuntimeError::InvalidOperator),
+                _ => Err(RuntimeError::InvalidOperator(operator.clone())),
             },
             (Value::String(l), Value::String(r)) => match operator.token_type {
                 TokenType::Plus => Ok(Value::String(format!("{}{}", l, r))),
                 TokenType::EqualEqual => Ok(Value::Bool(l == r)),
                 TokenType::BangEqual => Ok(Value::Bool(l != r)),
-                _ => Err(RuntimeError::InvalidOperator),
+                _ => Err(RuntimeError::InvalidOperator(operator.clone())),
             },
             (Value::Bool(l), Value::Bool(r)) => match operator.token_type {
                 TokenType::EqualEqual => Ok(Value::Bool(l == r)),
                 TokenType::BangEqual => Ok(Value::Bool(l != r)),
-                _ => Err(RuntimeError::InvalidOperator),
+                _ => Err(RuntimeError::InvalidOperator(operator.clone())),
             },
             (Value::Nil, Value::Nil) => match operator.token_type {
                 TokenType::EqualEqual => Ok(Value::Bool(true)),
                 TokenType::BangEqual => Ok(Value::Bool(false)),
-                _ => Err(RuntimeError::InvalidOperator),
+                _ => Err(RuntimeError::InvalidOperator(operator.clone())),
             },
             _ => match operator.token_type {
                 TokenType::EqualEqual => Ok(Value::Bool(false)),
                 TokenType::BangEqual => Ok(Value::Bool(true)),
-                _ => Err(RuntimeError::InvalidOperator),
+                _ => Err(RuntimeError::InvalidOperator(operator.clone())),
             },
         }
     }
