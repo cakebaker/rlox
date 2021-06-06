@@ -77,6 +77,7 @@ impl Environment {
 #[cfg(test)]
 mod tests {
     use super::Environment;
+    use crate::runtime_error::RuntimeError;
     use crate::value::Value;
 
     #[test]
@@ -84,19 +85,13 @@ mod tests {
         let mut env = Environment::new();
         env.define("key".to_string(), Value::String("value".to_string()));
 
-        if let Some(previous_value) =
-            env.assign("key".to_string(), Value::String("new value".to_string()))
-        {
-            assert_eq!(previous_value, Value::String("value".to_string()));
-        } else {
-            panic!("Environment::assign() returned unexpected None");
-        }
+        let previous_value = env
+            .assign("key".to_string(), Value::String("new value".to_string()))
+            .unwrap();
+        assert_eq!(previous_value, Value::String("value".to_string()));
 
-        if let Ok(result) = env.get("key".to_string()) {
-            assert_eq!(Value::String("new value".to_string()), result);
-        } else {
-            panic!("Environment::get() returned unexpected Err");
-        }
+        let result = env.get("key".to_string()).unwrap();
+        assert_eq!(Value::String("new value".to_string()), result);
     }
 
     #[test]
@@ -106,19 +101,13 @@ mod tests {
 
         let mut env = Environment::new_with_parent(parent);
 
-        if let Some(previous_value) =
-            env.assign("key".to_string(), Value::String("new value".to_string()))
-        {
-            assert_eq!(previous_value, Value::String("value".to_string()));
-        } else {
-            panic!("Environment::assign() returned unexpected None");
-        }
+        let previous_value = env
+            .assign("key".to_string(), Value::String("new value".to_string()))
+            .unwrap();
+        assert_eq!(previous_value, Value::String("value".to_string()));
 
-        if let Ok(result) = env.get("key".to_string()) {
-            assert_eq!(Value::String("new value".to_string()), result);
-        } else {
-            panic!("Environment::get() returned unexpected Err");
-        }
+        let result = env.get("key".to_string()).unwrap();
+        assert_eq!(Value::String("new value".to_string()), result);
     }
 
     #[test]
@@ -134,11 +123,8 @@ mod tests {
         let mut env = Environment::new();
         env.define("key".to_string(), Value::String("value".to_string()));
 
-        if let Ok(result) = env.get("key".to_string()) {
-            assert_eq!(Value::String("value".to_string()), result);
-        } else {
-            panic!("Environment::get() returned unexpected Err");
-        }
+        let result = env.get("key".to_string()).unwrap();
+        assert_eq!(Value::String("value".to_string()), result);
     }
 
     #[test]
@@ -148,21 +134,18 @@ mod tests {
 
         let env = Environment::new_with_parent(parent);
 
-        if let Ok(result) = env.get("key".to_string()) {
-            assert_eq!(Value::String("value".to_string()), result);
-        } else {
-            panic!("Environment::get() returned unexpected Err");
-        }
+        let result = env.get("key".to_string()).unwrap();
+        assert_eq!(Value::String("value".to_string()), result);
     }
 
     #[test]
     fn get_value_of_undefined_var() {
         let env = Environment::new();
+        let error = env.get("key".to_string()).unwrap_err();
 
-        if let Err(_) = env.get("key".to_string()) {
-            assert!(true);
-        } else {
-            panic!("Environment::get() didn't return expected Err");
+        match error {
+            RuntimeError::UndefinedVariable(var) => assert_eq!("key".to_string(), var),
+            _ => assert!(false),
         }
     }
 
