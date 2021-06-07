@@ -247,11 +247,8 @@ mod tests {
 
         for (literal, expected) in literals_and_expectations {
             let expr = Expr::Literal(literal);
-            if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                assert_eq!(expected, result);
-            } else {
-                panic!("Interpreter::evaluate() returned unexpected Err");
-            }
+            let result = Interpreter::new().evaluate(&expr).unwrap();
+            assert_eq!(expected, result);
         }
     }
 
@@ -261,11 +258,8 @@ mod tests {
             expression: Box::new(Expr::Literal(Literal::Bool(true))),
         };
 
-        if let Ok(result) = Interpreter::new().evaluate(&expr) {
-            assert_eq!(Value::Bool(true), result);
-        } else {
-            panic!("Interpreter::evaluate() returned unexpected Err");
-        }
+        let result = Interpreter::new().evaluate(&expr).unwrap();
+        assert_eq!(Value::Bool(true), result);
     }
 
     #[test]
@@ -275,11 +269,8 @@ mod tests {
             right: Box::new(Expr::Literal(Literal::Number(1.0))),
         };
 
-        if let Ok(result) = Interpreter::new().evaluate(&expr) {
-            assert_eq!(Value::Number(-1.0), result);
-        } else {
-            panic!("Interpreter::evaluate() returned unexpected Err");
-        }
+        let result = Interpreter::new().evaluate(&expr).unwrap();
+        assert_eq!(Value::Number(-1.0), result);
     }
 
     #[test]
@@ -312,11 +303,8 @@ mod tests {
                 right: Box::new(Expr::Literal(literal)),
             };
 
-            if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                assert_eq!(expected, result);
-            } else {
-                panic!("Interpreter::evaluate() returned unexpected Err");
-            }
+            let result = Interpreter::new().evaluate(&expr).unwrap();
+            assert_eq!(expected, result);
         }
     }
 
@@ -336,11 +324,8 @@ mod tests {
                 right: Box::new(Expr::Literal(Literal::Bool(right))),
             };
 
-            if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                assert_eq!(Value::Bool(expected), result);
-            } else {
-                panic!("Interpreter::evaluate() returned unexpected Err");
-            }
+            let result = Interpreter::new().evaluate(&expr).unwrap();
+            assert_eq!(Value::Bool(expected), result);
         }
     }
 
@@ -360,11 +345,8 @@ mod tests {
                 right: Box::new(Expr::Literal(Literal::Bool(right))),
             };
 
-            if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                assert_eq!(Value::Bool(expected), result);
-            } else {
-                panic!("Interpreter::evaluate() returned unexpected Err");
-            }
+            let result = Interpreter::new().evaluate(&expr).unwrap();
+            assert_eq!(Value::Bool(expected), result);
         }
     }
 
@@ -387,11 +369,8 @@ mod tests {
                 right: Box::new(Expr::Literal(RIGHT)),
             };
 
-            if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                assert_eq!(expected, result);
-            } else {
-                panic!("Interpreter::evaluate() returned unexpected Err");
-            }
+            let result = Interpreter::new().evaluate(&expr).unwrap();
+            assert_eq!(expected, result);
         }
     }
 
@@ -403,11 +382,8 @@ mod tests {
             right: Box::new(Expr::Literal(Literal::String("bb".to_string()))),
         };
 
-        if let Ok(result) = Interpreter::new().evaluate(&expr) {
-            assert_eq!(Value::String("aabb".to_string()), result);
-        } else {
-            panic!("Interpreter::evaluate() returned unexpected Err");
-        }
+        let result = Interpreter::new().evaluate(&expr).unwrap();
+        assert_eq!(Value::String("aabb".to_string()), result);
     }
 
     #[test]
@@ -437,11 +413,8 @@ mod tests {
                 right: Box::new(Expr::Literal(right)),
             };
 
-            if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                assert_eq!(Value::Bool(expected), result);
-            } else {
-                panic!("Interpreter::evaluate() returned unexpected Err");
-            }
+            let result = Interpreter::new().evaluate(&expr).unwrap();
+            assert_eq!(Value::Bool(expected), result);
         }
     }
 
@@ -480,11 +453,8 @@ mod tests {
                     right: Box::new(Expr::Literal(right.clone())),
                 };
 
-                if let Ok(result) = Interpreter::new().evaluate(&expr) {
-                    assert_eq!(Value::Bool(expected), result);
-                } else {
-                    panic!("Interpreter::evaluate() returned unexpected Err");
-                }
+                let result = Interpreter::new().evaluate(&expr).unwrap();
+                assert_eq!(Value::Bool(expected), result);
             }
         }
     }
@@ -500,21 +470,19 @@ mod tests {
 
         let expr = Expr::Variable(token(TokenType::String("test".to_string())));
 
-        if let Ok(result) = interpreter.evaluate(&expr) {
-            assert_eq!(Value::String("value".to_string()), result);
-        } else {
-            panic!("Interpreter::evaluate() returned unexpected Err");
-        }
+        let result = interpreter.evaluate(&expr).unwrap();
+        assert_eq!(Value::String("value".to_string()), result);
     }
 
     #[test]
     fn evaluate_undefined_variable() {
         let expr = Expr::Variable(token(TokenType::String("test".to_string())));
 
-        if let Err(e) = Interpreter::new().evaluate(&expr) {
-            assert!(true);
-        } else {
-            panic!("Interpreter::evaluate() didn't return an Err");
+        let error = Interpreter::new().evaluate(&expr).unwrap_err();
+
+        match error {
+            RuntimeError::UndefinedVariable(_) => assert!(true),
+            _ => assert!(false),
         }
     }
 
@@ -533,11 +501,8 @@ mod tests {
 
         let expr = Expr::Variable(token(TokenType::String("test".to_string())));
 
-        if let Ok(result) = interpreter.evaluate(&expr) {
-            assert_eq!(Value::String("updated".to_string()), result);
-        } else {
-            panic!("Interpreter::evaluate() returned unexpected Err");
-        }
+        let result = interpreter.evaluate(&expr).unwrap();
+        assert_eq!(Value::String("updated".to_string()), result);
     }
 
     fn token(token_type: TokenType) -> Token {
