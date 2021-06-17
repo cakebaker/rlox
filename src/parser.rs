@@ -41,13 +41,35 @@ impl Parser {
     }
 
     fn declaration(&mut self) -> ParseResult<Stmt> {
-        if self.do_match(vec![TokenType::Fun]) {
+        if self.do_match(vec![TokenType::Class]) {
+            self.class_declaration()
+        } else if self.do_match(vec![TokenType::Fun]) {
             self.function("function")
         } else if self.do_match(vec![TokenType::Var]) {
             self.var_declaration()
         } else {
             self.statement()
         }
+    }
+
+    fn class_declaration(&mut self) -> ParseResult<Stmt> {
+        let name = self.consume_identifier(ParseError::MissingClassName(self.previous()))?;
+        self.consume(
+            TokenType::LeftBrace,
+            ParseError::MissingBraceBeforeClassBody(self.previous()),
+        )?;
+
+        let mut methods = Vec::new();
+        while !self.check(&TokenType::RightBrace) && !self.is_at_end() {
+            methods.push(self.function("method")?);
+        }
+
+        self.consume(
+            TokenType::RightBrace,
+            ParseError::MissingBraceAfterClassBody(self.previous()),
+        )?;
+
+        Ok(Stmt::Class(name, methods))
     }
 
     fn function(&mut self, kind: &str) -> ParseResult<Stmt> {
@@ -556,6 +578,53 @@ mod tests {
 
         let result = parse(code).unwrap();
         assert_eq!(expected, result[0]);
+    }
+
+    #[test]
+    fn parse_class() {
+        let result = parse(
+            r#"class Test {
+                   test() {
+                       return "test";
+                   }
+               }"#,
+        )
+        .unwrap();
+        let expected = Stmt::Class(
+            Token::new(TokenType::Identifier("Test".to_string()), 1),
+            vec![Stmt::Function(
+                Token::new(TokenType::Identifier("test".to_string()), 2),
+                vec![],
+                vec![Stmt::Return(
+                    Token::new(TokenType::Return, 3),
+                    Some(Expr::Literal(Literal::String("test".to_string()))),
+                )],
+            )],
+        );
+        assert_eq!(expected, result[0]);
+    }
+
+    #[test]
+    fn parse_class_without_name() {
+        let errors = parse("class").unwrap_err();
+        let expected = ParseError::MissingClassName(token(TokenType::Class));
+        assert_eq!(expected, errors[0]);
+    }
+
+    #[test]
+    fn parse_class_with_missing_left_brace() {
+        let errors = parse("class Test").unwrap_err();
+        let expected = ParseError::MissingBraceBeforeClassBody(token(TokenType::Identifier(
+            "Test".to_string(),
+        )));
+        assert_eq!(expected, errors[0]);
+    }
+
+    #[test]
+    fn parse_class_with_missing_right_brace() {
+        let errors = parse("class Test {").unwrap_err();
+        let expected = ParseError::MissingBraceAfterClassBody(token(TokenType::LeftBrace));
+        assert_eq!(expected, errors[0]);
     }
 
     #[test]

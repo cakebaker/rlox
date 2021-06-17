@@ -6,7 +6,10 @@ use std::fmt;
 pub enum ParseError {
     InvalidToken(Token),
     MissingBraceAfterBlock(Token),
+    MissingBraceAfterClassBody(Token),
     MissingBraceBeforeBody(Token, String),
+    MissingBraceBeforeClassBody(Token),
+    MissingClassName(Token),
     MissingName(Token, String),
     MissingParameterName(Token),
     MissingParenAfterArguments(Token),
@@ -42,12 +45,21 @@ impl fmt::Display for ParseError {
             Self::MissingBraceAfterBlock(token) => {
                 write!(f, "Expect '}}' after block on line {}.", token.line)
             }
+            Self::MissingBraceAfterClassBody(token) => {
+                write!(f, "Expect '}}' after class body on line {}.", token.line)
+            }
             Self::MissingBraceBeforeBody(token, kind) => {
                 write!(
                     f,
                     "Expect '{{' before {} body on line {}.",
                     kind, token.line
                 )
+            }
+            Self::MissingBraceBeforeClassBody(token) => {
+                write!(f, "Expect '{{' before class body on line {}.", token.line)
+            }
+            Self::MissingClassName(token) => {
+                write!(f, "Expect class name after 'class' on line {}.", token.line)
             }
             Self::MissingName(token, kind) => {
                 write!(f, "Expect {} name on line {}.", kind, token.line)

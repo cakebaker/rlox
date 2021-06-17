@@ -36,6 +36,7 @@ impl Interpreter {
             Stmt::Block(statements) => {
                 self.execute_block(statements, &self.environment.clone())?;
             }
+            Stmt::Class(name, methods) => {} // TODO implement
             Stmt::Expr(expr) => {
                 self.evaluate(&*expr)?;
             }
