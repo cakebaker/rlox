@@ -135,6 +135,7 @@ impl Interpreter {
                     _ => Err(RuntimeError::ValueNotCallable(callee)),
                 }
             }
+            Expr::Get { object, name } => Err(RuntimeError::InvalidOperator(name.clone())), // TODO implement
             Expr::Grouping { expression: expr } => self.evaluate(&*expr),
             Expr::Literal(Literal::Bool(bool)) => Ok(Value::Bool(*bool)),
             Expr::Literal(Literal::Nil) => Ok(Value::Nil),

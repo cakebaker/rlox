@@ -22,6 +22,7 @@ pub enum ParseError {
     MissingParenAfterParameters(Token),
     MissingParenAfterWhile(Token),
     MissingParenAfterWhileCondition(Token),
+    MissingPropertyName(Token),
     MissingSemicolonAfterLoopCondition(Token),
     MissingSemicolonAfterReturnValue(Token),
     MissingSemicolonAfterValue(Token),
@@ -104,6 +105,9 @@ impl fmt::Display for ParseError {
                     "Expect ')' after 'while' condition on line {}.",
                     token.line
                 )
+            }
+            Self::MissingPropertyName(token) => {
+                write!(f, "Expect property name after '.' on line {}.", token.line)
             }
             Self::MissingSemicolonAfterLoopCondition(token) => {
                 write!(f, "Expect ';' after loop condition on line {}.", token.line)

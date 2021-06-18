@@ -432,6 +432,13 @@ impl Parser {
         loop {
             if self.do_match(vec![TokenType::LeftParen]) {
                 expr = self.finish_call(expr)?;
+            } else if self.do_match(vec![TokenType::Dot]) {
+                let name =
+                    self.consume_identifier(ParseError::MissingPropertyName(self.previous()))?;
+                expr = Expr::Get {
+                    object: Box::new(expr),
+                    name,
+                };
             } else {
                 break;
             }
@@ -624,6 +631,25 @@ mod tests {
     fn parse_class_with_missing_right_brace() {
         let errors = parse("class Test {").unwrap_err();
         let expected = ParseError::MissingBraceAfterClassBody(token(TokenType::LeftBrace));
+        assert_eq!(expected, errors[0]);
+    }
+
+    #[test]
+    fn parse_getter() {
+        let result = parse("someObject.someProperty;").unwrap();
+        let expected = Stmt::Expr(Expr::Get {
+            object: Box::new(Expr::Variable(token(TokenType::Identifier(
+                "someObject".to_string(),
+            )))),
+            name: token(TokenType::Identifier("someProperty".to_string())),
+        });
+        assert_eq!(expected, result[0]);
+    }
+
+    #[test]
+    fn parse_getter_with_missing_name() {
+        let errors = parse("someObject.").unwrap_err();
+        let expected = ParseError::MissingPropertyName(token(TokenType::Dot));
         assert_eq!(expected, errors[0]);
     }
 
