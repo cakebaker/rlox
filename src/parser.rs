@@ -487,6 +487,7 @@ impl Parser {
             TokenType::Nil => Ok(Expr::Literal(Literal::Nil)),
             TokenType::Number(number) => Ok(Expr::Literal(Literal::Number(number))),
             TokenType::String(string) => Ok(Expr::Literal(Literal::String(string))),
+            TokenType::This => Ok(Expr::This(self.previous())),
             TokenType::Identifier(_) => Ok(Expr::Variable(self.previous())),
             // XXX a '(' at the end causes a stack overflow
             TokenType::LeftParen if !self.is_at_end() => {
@@ -671,6 +672,13 @@ mod tests {
                 "value".to_string(),
             )))),
         });
+        assert_eq!(expected, result[0]);
+    }
+
+    #[test]
+    fn parse_this() {
+        let result = parse("this;").unwrap();
+        let expected = Stmt::Expr(Expr::This(token(TokenType::This)));
         assert_eq!(expected, result[0]);
     }
 

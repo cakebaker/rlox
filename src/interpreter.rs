@@ -164,6 +164,7 @@ impl Interpreter {
                 name,
                 value,
             } => Err(RuntimeError::InvalidOperator(name.clone())), // TODO implement
+            Expr::This(keyword) => Err(RuntimeError::InvalidOperator(keyword.clone())), // TODO implement
             Expr::Unary { operator, right } => self.evaluate_unary(operator, &*right),
             Expr::Variable(name) => self.environment.get(name.lexeme.clone()),
         }
