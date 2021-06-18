@@ -303,6 +303,12 @@ impl Parser {
                     name,
                     value: Box::new(value),
                 });
+            } else if let Expr::Get { object, name } = expr {
+                return Ok(Expr::Set {
+                    object,
+                    name,
+                    value: Box::new(value),
+                });
             }
         }
 
@@ -651,6 +657,21 @@ mod tests {
         let errors = parse("someObject.").unwrap_err();
         let expected = ParseError::MissingPropertyName(token(TokenType::Dot));
         assert_eq!(expected, errors[0]);
+    }
+
+    #[test]
+    fn parse_setter() {
+        let result = parse("someObject.someProperty = value;").unwrap();
+        let expected = Stmt::Expr(Expr::Set {
+            object: Box::new(Expr::Variable(token(TokenType::Identifier(
+                "someObject".to_string(),
+            )))),
+            name: token(TokenType::Identifier("someProperty".to_string())),
+            value: Box::new(Expr::Variable(token(TokenType::Identifier(
+                "value".to_string(),
+            )))),
+        });
+        assert_eq!(expected, result[0]);
     }
 
     #[test]

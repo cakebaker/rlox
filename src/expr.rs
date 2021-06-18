@@ -30,6 +30,11 @@ pub enum Expr {
         operator: Token,
         right: Box<Expr>,
     },
+    Set {
+        object: Box<Expr>,
+        name: Token,
+        value: Box<Expr>,
+    },
     Unary {
         operator: Token,
         right: Box<Expr>,

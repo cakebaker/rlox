@@ -159,6 +159,11 @@ impl Interpreter {
 
                 Ok(self.evaluate(&*right)?)
             }
+            Expr::Set {
+                object,
+                name,
+                value,
+            } => Err(RuntimeError::InvalidOperator(name.clone())), // TODO implement
             Expr::Unary { operator, right } => self.evaluate_unary(operator, &*right),
             Expr::Variable(name) => self.environment.get(name.lexeme.clone()),
         }
