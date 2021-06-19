@@ -561,14 +561,8 @@ impl Parser {
 
 #[cfg(test)]
 mod tests {
-    use super::Parser;
-    use crate::expr::Expr;
-    use crate::literal::Literal;
-    use crate::parse_error::ParseError;
+    use super::*;
     use crate::scanner::Scanner;
-    use crate::stmt::Stmt;
-    use crate::token::Token;
-    use crate::token_type::TokenType;
 
     #[test]
     fn parse_unary_bang() {

@@ -76,9 +76,7 @@ impl Environment {
 
 #[cfg(test)]
 mod tests {
-    use super::Environment;
-    use crate::runtime_error::RuntimeError;
-    use crate::value::Value;
+    use super::*;
 
     #[test]
     fn assign_value_to_var() {

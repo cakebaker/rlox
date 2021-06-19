@@ -163,9 +163,7 @@ impl Scanner {
 
 #[cfg(test)]
 mod tests {
-    use super::Scanner;
-    use crate::scan_error::ScanError;
-    use crate::token_type::TokenType;
+    use super::*;
 
     #[test]
     fn scan_empty_string() {

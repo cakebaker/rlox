@@ -231,14 +231,7 @@ impl Interpreter {
 
 #[cfg(test)]
 mod tests {
-    use super::Interpreter;
-    use crate::expr::Expr;
-    use crate::literal::Literal;
-    use crate::runtime_error::RuntimeError;
-    use crate::stmt::Stmt;
-    use crate::token::Token;
-    use crate::token_type::TokenType;
-    use crate::value::Value;
+    use super::*;
 
     #[test]
     fn evaluate_literals() {

@@ -28,8 +28,7 @@ impl Token {
 
 #[cfg(test)]
 mod tests {
-    use super::Token;
-    use crate::token_type::TokenType;
+    use super::*;
 
     #[test]
     fn new_with_string_token_type() {
