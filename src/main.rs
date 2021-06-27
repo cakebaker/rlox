@@ -33,7 +33,7 @@ fn main() {
         1 => run_prompt(),
         2 => run_file(&args[1]),
         _ => {
-            println!("Usage: rlow [script]");
+            println!("Usage: rlox [script]");
             // exit code from https://www.freebsd.org/cgi/man.cgi?query=sysexits&apropos=0&sektion=0&manpath=FreeBSD+4.3-RELEASE&format=html
             std::process::exit(64);
         }
