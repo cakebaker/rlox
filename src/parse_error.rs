@@ -34,6 +34,7 @@ pub enum ParseError {
 impl Error for ParseError {}
 
 impl fmt::Display for ParseError {
+    #[allow(clippy::too_many_lines)]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::InvalidToken(token) => {
