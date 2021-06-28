@@ -2,15 +2,13 @@
 
 mod clock;
 mod environment;
+mod error;
 mod expr;
 mod interpreter;
 mod literal;
 mod lox_callable;
 mod lox_function;
-mod parse_error;
 mod parser;
-mod runtime_error;
-mod scan_error;
 mod scanner;
 mod stmt;
 mod token;

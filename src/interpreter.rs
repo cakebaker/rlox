@@ -1,9 +1,9 @@
 use crate::clock::Clock;
 use crate::environment::Environment;
+use crate::error::RuntimeError;
 use crate::expr::Expr;
 use crate::literal::Literal;
 use crate::lox_function::LoxFunction;
-use crate::runtime_error::RuntimeError;
 use crate::stmt::Stmt;
 use crate::token::Token;
 use crate::token_type::TokenType;

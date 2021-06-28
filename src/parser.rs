@@ -1,6 +1,6 @@
+use crate::error::ParseError;
 use crate::expr::Expr;
 use crate::literal::Literal;
-use crate::parse_error::ParseError;
 use crate::stmt::Stmt;
 use crate::token::Token;
 use crate::token_type::TokenType;

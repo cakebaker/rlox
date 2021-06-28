@@ -1,4 +1,4 @@
-use crate::scan_error::ScanError;
+use crate::error::ScanError;
 use crate::token::Token;
 use crate::token_type::TokenType;
 
