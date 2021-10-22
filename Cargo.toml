@@ -2,7 +2,7 @@
 name = "rlox"
 version = "0.1.0"
 authors = ["Daniel Hofstetter <daniel.hofstetter@42dh.com>"]
-edition = "2018"
+edition = "2021"
 description = "An interpreter for the Lox language (based on the book 'Crafting Interpreters')"
 license = "MIT"
 repository = "https://github.com/cakebaker/rlox"
